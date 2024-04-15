@@ -165,7 +165,7 @@ void CoopGT::computeCooperativeGains(const double& alpha)
 {
   setAlpha(alpha);
   if(!updateGTMatrices())
-    ROS_ERROR("comething wrong in updating matrices");
+    ROS_ERROR("Something wrong in updating matrices");
   computeCooperativeGains(Q_gt_, R_gt_);
 }
 
@@ -362,7 +362,6 @@ Eigen::VectorXd CoopGT::step(const Eigen::VectorXd& x, const Eigen::VectorXd& re
     ROS_ERROR("references have an incorrect length .");
   
   Eigen::VectorXd u = computeControlInputs();
-  
   
   setCurrentState(x);
   dX_ = A_*X_ + B_*u.segment(0,n_dofs_) + B_*u.segment(n_dofs_,n_dofs_);

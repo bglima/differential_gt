@@ -19,13 +19,13 @@ public:
                     Eigen::MatrixXd& B,
                     Eigen::MatrixXd& C);
 
-  void setCostsParams(const Eigen::MatrixXd& Q11,
-                      const Eigen::MatrixXd& Q12,
-                      const Eigen::MatrixXd& Q21,
-                      const Eigen::MatrixXd& Q22,
+  void setCostsParams(const Eigen::MatrixXd& Q1,
+                      const Eigen::MatrixXd& Q2,
                       const Eigen::MatrixXd& R1,
-                      const Eigen::MatrixXd& R2);
-  
+                      const Eigen::MatrixXd& R2,
+                      const Eigen::MatrixXd& R12,
+                      const Eigen::MatrixXd& R21);
+
   void setCostsParams(const Eigen::MatrixXd& Q1,
                       const Eigen::MatrixXd& Q2,
                       const Eigen::MatrixXd& R1,
@@ -42,6 +42,8 @@ public:
   bool setPosReference(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2);
   bool setReference(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2);
   void getReference(Eigen::VectorXd& ref_1, Eigen::VectorXd& ref_2);
+
+  void getControlInput(Eigen::VectorXd& control);
 
 //   bool computeControlInputs(Eigen::VectorXd& u1, Eigen::VectorXd& u2);
   Eigen::VectorXd  computeControlInputs();

@@ -60,6 +60,9 @@ install(
 )
 
 add_executable(dgt_node src/differential_gt/dgt_node.cpp)
+add_executable(ncgt_ros_node src/differential_gt/ncgt_ros_node.cpp)
+
 target_link_libraries(dgt_node cgt ncgt ${catkin_LIBRARIES})
+target_link_libraries(ncgt_ros_node cgt ncgt ${catkin_LIBRARIES})
 
 

@@ -1,0 +1,10 @@
+<launch>
+  <!-- Lunch differential_gt node -->
+  <node name="nc_differential_gt" pkg="differential_gt" type="ncgt_ros_node" respawn="false" 
+    args="" output="screen" />
+
+  <!-- Plot controller's state -->
+  <node name="rqt_multiplot" pkg="rqt_multiplot" type="rqt_multiplot" respawn="false" 
+    args="--multiplot-config $(find differential_gt)/config/state_control_multiplot.xml --multiplot-run-all " />
+
+</launch>
