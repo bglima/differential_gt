@@ -87,7 +87,7 @@
                             <x_axis>
                                 <custom_title>time (s)</custom_title>
                                 <title_type>1</title_type>
-                                <title_visible>false</title_visible>
+                                <title_visible>true</title_visible>
                             </x_axis>
                             <y_axis>
                                 <custom_title>velocity (m/s)</custom_title>
@@ -291,7 +291,7 @@
                                 <title_visible>true</title_visible>
                             </x_axis>
                             <y_axis>
-                                <custom_title>position (m)</custom_title>
+                                <custom_title>force (N)</custom_title>
                                 <title_type>1</title_type>
                                 <title_visible>true</title_visible>
                             </y_axis>
@@ -405,7 +405,7 @@
                         <visible>true</visible>
                     </legend>
                     <plot_rate>30</plot_rate>
-                    <title>Robot Control u</title>
+                    <title>Control u</title>
                 </column_1>
             </row_1>
         </plots>
