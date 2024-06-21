@@ -32,11 +32,6 @@ cgt src/differential_gt/cgt.cpp
 )
 target_link_libraries(cgt  ${catkin_LIBRARIES} Eigen3::Eigen)
 
-add_library(
-ncgt src/differential_gt/ncgt.cpp
-)
-target_link_libraries(ncgt  ${catkin_LIBRARIES} Eigen3::Eigen)
-
 install(
   TARGETS cgt
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
@@ -47,6 +42,11 @@ install(
   DIRECTORY include/cgt/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
+
+add_library(
+ncgt src/differential_gt/ncgt.cpp
+)
+target_link_libraries(ncgt  ${catkin_LIBRARIES} Eigen3::Eigen)
 
 install(
   TARGETS ncgt
@@ -61,8 +61,12 @@ install(
 
 add_executable(dgt_node src/differential_gt/dgt_node.cpp)
 add_executable(ncgt_ros_node src/differential_gt/ncgt_ros_node.cpp)
+add_executable(cgt_ros_node src/differential_gt/cgt_ros_node.cpp)
+add_executable(diff_game_theory_node src/differential_gt/diff_game_theory_node.cpp)
 
 target_link_libraries(dgt_node cgt ncgt ${catkin_LIBRARIES})
 target_link_libraries(ncgt_ros_node cgt ncgt ${catkin_LIBRARIES})
+target_link_libraries(cgt_ros_node cgt ncgt ${catkin_LIBRARIES})
+target_link_libraries(diff_game_theory_node cgt ncgt ${catkin_LIBRARIES})
 
 

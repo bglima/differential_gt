@@ -1,60 +1,105 @@
 #include "ros/ros.h"
 #include <differential_gt/cgt.h>
 #include <differential_gt/ncgt.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TwistStamped.h> 
+#include <geometry_msgs/WrenchStamped.h>
 
-std::vector<double> range(double min, double max, double dt) {
-    std::vector<double> range;
-    for(int i=0; i<max/dt; i++) {
-        range.push_back(min + i*dt);
-    }
-    return range;
+std::vector<double> range(double min, double max, double dt)
+{
+     /*From the public member function std::vector::push_back.
+
+          void push_back (const value_type& val);
+
+     This function add a new element at the end of the vector, after its current last element.
+     The content of val is copied (or moved) to the new element.*/
+
+     std::vector<double> range;
+     for(int i=0; i<max/dt; i++) 
+     {
+          range.push_back(min + i*dt);
+     }
+     return range;
 }
 
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "d_mpc");
-  ros::NodeHandle n;
-  
-  int n_dofs=1;
-  double dt = 0.01;
-  
-  std::vector<double> time = range(0.0,10.0,dt);
-  
-  
-  Eigen::VectorXd ref_h; ref_h.resize(time.size());
-  Eigen::VectorXd ref_r; ref_r.resize(time.size());
-  
-  for (int i = 0;i<time.size();i++)
-  {
-    ref_h(i) = 1;//std::sin(time[i]);
-    ref_r(i) = 0.5;//*std::sin(time[i]);
-  }
-  
-  
-  Eigen::MatrixXd Ac;
-  Eigen::MatrixXd Bc;
-  Eigen::MatrixXd Cc;
-  Ac.resize(2*n_dofs,2*n_dofs);
-  Bc.resize(2*n_dofs,n_dofs);
-  Cc.resize(n_dofs,2*n_dofs);
-  
-  double m,c,k;
-  
-  m=10;
-  k=0;
-  c=25;
+     // defining the ros_node. The third argument is the name of the node.
+     ros::init(argc, argv, "diff_game_theory_node");
+     /*NodeHandle is the main access point to communications with the ROS system.
+     The first Nodehandle constructed will fully initialize this node;
+     the last NodeHandle destructed will close down the node.*/
 
-  Ac << 0, 1,
-        -k/m, -c/m;
-        
-  Bc << 0,
-        1/m;
-       
-  Cc << 1, 0;
+     ros::NodeHandle n;
   
-  NonCoopGT ncgt(n_dofs,dt);
-  ncgt.setSysParams(Ac,Bc);
+     int n_dofs=1;
+     double dt = 0.01;
+  
+     std::vector<double> time = range(0.0, 6 * M_PI - dt, dt); // M_PI = 3.14159
+  
+     // Eigen is a C++ template library for linear algebra: matrices, vectors, numerical solvers, and related algorithms.
+  
+     Eigen::VectorXd ref_h; ref_h.resize(time.size());
+     Eigen::VectorXd ref_r; ref_r.resize(time.size());
+
+     // We define a constant reference to be followed by the robot.
+     /* 
+     We will have three intervals of 2*pi here
+     (1) In the first interval, the robot reference will be zero.
+     (2) In the second interval, the robot reference will be the same as the human.
+     (3) In the last interval, the robot reference will be the reverse of the human
+     */
+  
+     for (int i = 0; i<time.size(); i++)
+     {
+          ref_h(i) = 0.6*std::sin(time[i]);
+          
+          if (i <= time.size() / 3)
+          ref_r(i) = 0;
+
+          else if (i <= 2 * time.size() / 3)
+          ref_r(i) = 0.6*std::sin(time[i]);
+
+          else
+          ref_r(i) = -0.6*std::sin(time[i]);
+     }
+  
+     Eigen::MatrixXd Ac; Ac.resize(2*n_dofs,2*n_dofs);
+     Eigen::MatrixXd Bc; Bc.resize(2*n_dofs,n_dofs);
+     Eigen::MatrixXd Cc; Cc.resize(n_dofs,2*n_dofs);
+     
+     double m,c,k;
+     // Initialize the impedance parameters in the original formulation
+     
+     m=10;
+     k=0;
+     c=25;
+     
+     // Initialize the linearized state space matrices
+     Ac << 0, 1,
+     -k/m, -c/m;
+     
+     Bc << 0,
+     1/m;
+     
+     Cc << 1, 0;
+  
+     // Initialize the Non-Cooperative GT controller
+     NonCoopGT ncgt(n_dofs,dt);
+
+     // Set the System Parameters
+     ncgt.setSysParams(Ac,Bc);
+
+     // Get the System Parameters
+     ncgt.getSysParams(Ac,Bc,Cc);
+
+     // Print the System Parameters
+     std::cout<<"SYSTEM PARAMETERS: \n";
+
+     ROS_INFO_STREAM("Ac: \n" << Ac << "\n");
+     ROS_INFO_STREAM("Bc: \n" << Bc << "\n");
+     ROS_INFO_STREAM("Cc: \n" << Cc << "\n");   
   
   CoopGT cgt(n_dofs,dt);
   cgt.setSysParams(Ac,Bc);
@@ -109,10 +154,8 @@ int main(int argc, char **argv)
   ncgt.getNonCooperativeGains(Kh,Kr);
   ROS_INFO_STREAM("Kh: \n"<<Kh);
   ROS_INFO_STREAM("Kr: \n"<<Kr);
-  
-  
+
   std::cin.get();
-  
   
   Eigen::VectorXd rh = ref_h.segment(0,1);
   Eigen::VectorXd rr = ref_r.segment(0,1);

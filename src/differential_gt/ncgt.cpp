@@ -9,8 +9,8 @@ NonCoopGT::NonCoopGT(const int& n_dofs, const double& dt): n_dofs_(n_dofs), dt_(
   X_.resize(2*n_dofs_);
   dX_.resize(2*n_dofs_);
     
-  Q1_  .resize(2*n_dofs_,2*n_dofs_);Q1_  .setZero(); 
-  Q2_  .resize(2*n_dofs_,2*n_dofs_);Q2_  .setZero(); 
+  Q1_.resize(2*n_dofs_,2*n_dofs_);Q1_.setZero(); 
+  Q2_.resize(2*n_dofs_,2*n_dofs_);Q2_.setZero(); 
   
   R1_.resize(n_dofs_,n_dofs_); R1_.setZero();
   R2_.resize(n_dofs_,n_dofs_); R2_.setZero();
@@ -31,16 +31,16 @@ NonCoopGT::NonCoopGT(const int& n_dofs, const double& dt): n_dofs_(n_dofs), dt_(
   gains_set_      = false;
   init_P12_       = true;
 }
-void NonCoopGT::setSysParams( const Eigen::MatrixXd& A,
-                              const Eigen::MatrixXd& B)
+
+// This function is used whether the C matrix is not initialized in the other script and 
+// it automatically defines it.
+void NonCoopGT::setSysParams(const Eigen::MatrixXd& A,const Eigen::MatrixXd& B)
 {
   Eigen::MatrixXd C; C.resize(n_dofs_,2*n_dofs_); C.setZero();
   C.block(0,0,n_dofs_,n_dofs_) = Eigen::MatrixXd::Identity(n_dofs_,n_dofs_);
   setSysParams(A,B,C);
 }
-void NonCoopGT::setSysParams( const Eigen::MatrixXd& A,
-                        const Eigen::MatrixXd& B,
-                        const Eigen::MatrixXd& C)
+void NonCoopGT::setSysParams(const Eigen::MatrixXd& A,const Eigen::MatrixXd& B,const Eigen::MatrixXd& C)
 {
   A_ = A;
   B_ = B;
@@ -53,9 +53,7 @@ void NonCoopGT::setSysParams( const Eigen::MatrixXd& A,
   sys_params_set_ = true;
 }
 
-bool NonCoopGT::getSysParams(Eigen::MatrixXd& A,
-                       Eigen::MatrixXd& B,
-                       Eigen::MatrixXd& C)
+bool NonCoopGT::getSysParams(Eigen::MatrixXd& A,Eigen::MatrixXd& B,Eigen::MatrixXd& C)
 {
   if(!sys_params_set_)
   {
@@ -66,16 +64,24 @@ bool NonCoopGT::getSysParams(Eigen::MatrixXd& A,
   A = A_;
   B = B_;
   C = C_;
+
+  // // Print the System Parameters for the Non-cooperative case.
+
+  // std::cout<<"SYSTEM PARAMETERS NON-COOPERATIVE CASE: \n";
+
+  // ROS_INFO_STREAM("A: \n" << A << "\n");
+  // ROS_INFO_STREAM("B: \n" << B << "\n");
+  // ROS_INFO_STREAM("C: \n" << C << "\n"); 
   
   return true;
 }
 
 void NonCoopGT::setCostsParams(const Eigen::MatrixXd& Q1,
-                               const Eigen::MatrixXd& Q2,
-                               const Eigen::MatrixXd& R1,
-                               const Eigen::MatrixXd& R2,
-                               const Eigen::MatrixXd& R12,
-                               const Eigen::MatrixXd& R21)
+                              const Eigen::MatrixXd& Q2,
+                              const Eigen::MatrixXd& R1,
+                              const Eigen::MatrixXd& R2,
+                              const Eigen::MatrixXd& R12,
+                              const Eigen::MatrixXd& R21)
 {
   Q1_ = Q1;
   Q2_ = Q2;
@@ -86,19 +92,14 @@ void NonCoopGT::setCostsParams(const Eigen::MatrixXd& Q1,
   
   cost_params_set_ = true;
 }
-void NonCoopGT::setCostsParams(const Eigen::MatrixXd& Q1,
-                               const Eigen::MatrixXd& Q2,
-                               const Eigen::MatrixXd& R1,
-                               const Eigen::MatrixXd& R2)
+void NonCoopGT::setCostsParams(const Eigen::MatrixXd& Q1,const Eigen::MatrixXd& Q2,
+                              const Eigen::MatrixXd& R1,const Eigen::MatrixXd& R2)
 {
   Eigen::MatrixXd R12 = Eigen::MatrixXd::Zero(n_dofs_, n_dofs_);
   Eigen::MatrixXd R21 = Eigen::MatrixXd::Zero(n_dofs_, n_dofs_);
   setCostsParams(Q1,Q2,R1,R2,R12,R21);
 }
-bool NonCoopGT::getCostMatrices(Eigen::MatrixXd& Q1,
-                                Eigen::MatrixXd& Q2,
-                                Eigen::MatrixXd& R1,
-                                Eigen::MatrixXd& R2)
+bool NonCoopGT::getCostMatrices(Eigen::MatrixXd& Q1,Eigen::MatrixXd& Q2,Eigen::MatrixXd& R1,Eigen::MatrixXd& R2)
 {
   if (!cost_params_set_)
   {
@@ -110,7 +111,18 @@ bool NonCoopGT::getCostMatrices(Eigen::MatrixXd& Q1,
   Q2 = Q2_;
   R1 = R1_;
   R2 = R2_;
+
+  // // Print the Non-cooperative cost matrices.
+
+  // std::cout<< "COST PARAMETERS NON-COOPERATIVE CASE: \n";
   
+  // ROS_INFO_STREAM("Q1: \n"<< Q1 << "\n");
+  // ROS_INFO_STREAM("Q2: \n"<< Q2 << "\n");
+  // ROS_INFO_STREAM("R1: \n"<< R1 << "\n");
+  // ROS_INFO_STREAM("R2: \n"<< R2 << "\n");
+  // ROS_INFO_STREAM("R12: \n"<< R12_ << "\n");
+  // ROS_INFO_STREAM("R21: \n"<< R21_ << "\n");
+
   return true;
 }
 
@@ -127,7 +139,13 @@ bool NonCoopGT::setCurrentState(const Eigen::VectorXd& x)
   return true;
 }
 
-Eigen::VectorXd NonCoopGT::getCurrentState(){return X_;};
+Eigen::VectorXd NonCoopGT::getCurrentState()
+{
+  // std::cout << "CURRENT STATE NON-COOPERATIVE CASE:\n";
+  // ROS_INFO_STREAM("X:\n" << X_ << "\n");
+
+  return X_;  
+};
 
 void NonCoopGT::computeNonCooperativeGains()
 {
@@ -138,11 +156,17 @@ void NonCoopGT::computeNonCooperativeGains()
   gains_set_ = true;
 }
 
-
 void NonCoopGT::getNonCooperativeGains(Eigen::MatrixXd& K1, Eigen::MatrixXd& K2)
 {
   if(!gains_set_)
     ROS_WARN_STREAM("gains have not yet been computed ! ");
+
+  // // Print the Non-Cooperative Gains
+
+  // std::cout << "GAIN MATRICES NON COOPERATIVE CASE: \n";
+  // ROS_INFO_STREAM("K1: \n" << K_1_ << "\n");
+  // ROS_INFO_STREAM("K2: \n" << K_2_ << "\n");
+  
   K1 = K_1_;
   K2 = K_2_;
 }
@@ -185,6 +209,14 @@ void NonCoopGT::getReference(Eigen::VectorXd& ref_1, Eigen::VectorXd& ref_2)
 {
   ref_1 = ref_1_;
   ref_2 = ref_2_;
+
+  // // print the human reference
+  // std::cout << "HUMAN REFERENCE NON-COOPERATIVE CASE: \n";
+  // ROS_INFO_STREAM("Human reference: \n" << ref_1 << "\n");
+
+  // // print the robot reference
+  // std::cout << "ROBOT REFERENCE NON-COOPERATIVE CASE: \n";
+  // ROS_INFO_STREAM("robot reference: \n" << ref_2 << "\n");
 }
 
 void NonCoopGT::getControlInput(Eigen::VectorXd& control)
@@ -193,14 +225,19 @@ void NonCoopGT::getControlInput(Eigen::VectorXd& control)
   Eigen::VectorXd u_2 = -K_2_ * (X_ - ref_2_);
 
   control.resize(2*n_dofs_);
-  control << u_1,
-             u_2;
+  control << u_1,u_2;
+
+  // // print the non-cooperative control inputs in a unique vector
+  // std::cout << "NON-COOPERATIVE CONTROL INPUT VECTOR: \n";
+  // ROS_INFO_STREAM("control input: \n" << control << "\n");
+
 }
 
 Eigen::MatrixXd NonCoopGT::solveRiccati(const Eigen::MatrixXd &A,
-                                  const Eigen::MatrixXd &B,
-                                  const Eigen::MatrixXd &Q,
-                                  const Eigen::MatrixXd &R, Eigen::MatrixXd &P)
+                                        const Eigen::MatrixXd &B,
+                                        const Eigen::MatrixXd &Q,
+                                        const Eigen::MatrixXd &R, 
+                                        Eigen::MatrixXd &P)
 {
   const uint dim_x = A.rows();
   const uint dim_u = B.cols();
@@ -228,16 +265,17 @@ Eigen::MatrixXd NonCoopGT::solveRiccati(const Eigen::MatrixXd &A,
   return R.inverse()*B.transpose()*P;
 }
 
-void NonCoopGT::solveNashEquilibrium( const Eigen::MatrixXd &A,
-                                const Eigen::MatrixXd &B1,
-                                const Eigen::MatrixXd &B2,
-                                const Eigen::MatrixXd &Q1,
-                                const Eigen::MatrixXd &Q2,
-                                const Eigen::MatrixXd &R1,
-                                const Eigen::MatrixXd &R2, 
-                                const Eigen::MatrixXd &R12,
-                                const Eigen::MatrixXd &R21, 
-                                Eigen::MatrixXd &P1,Eigen::MatrixXd &P2)
+void NonCoopGT::solveNashEquilibrium(const Eigen::MatrixXd &A,
+                                    const Eigen::MatrixXd &B1,
+                                    const Eigen::MatrixXd &B2,
+                                    const Eigen::MatrixXd &Q1,
+                                    const Eigen::MatrixXd &Q2,
+                                    const Eigen::MatrixXd &R1,
+                                    const Eigen::MatrixXd &R2, 
+                                    const Eigen::MatrixXd &R12,
+                                    const Eigen::MatrixXd &R21, 
+                                    Eigen::MatrixXd &P1,
+                                    Eigen::MatrixXd &P2)
 {
   Eigen::MatrixXd S1  = B1 * R1.inverse() * B1.transpose();
   Eigen::MatrixXd S2  = B2 * R2.inverse() * B2.transpose();
@@ -256,7 +294,6 @@ void NonCoopGT::solveNashEquilibrium( const Eigen::MatrixXd &A,
   {
     P1=P1_prev_;
     P2=P2_prev_;
-
   }
 
   double err_1 = 1;

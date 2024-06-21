@@ -5,3 +5,6 @@
 *.kdev*
 *.idea
 *.idea*
+*settings.json*
+*config/*
+*c_cpp_properties.json

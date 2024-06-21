@@ -42,6 +42,7 @@ public:
   Eigen::VectorXd getReference();
   
   Eigen::VectorXd computeControlInputs();
+  void getControlInput(Eigen::VectorXd& control);
   Eigen::VectorXd step(const Eigen::VectorXd& x, const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2);
   Eigen::VectorXd step(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2);
   Eigen::VectorXd getCurrentState();

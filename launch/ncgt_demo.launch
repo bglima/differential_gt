@@ -5,6 +5,6 @@
 
   <!-- Plot controller's state -->
   <node name="rqt_multiplot" pkg="rqt_multiplot" type="rqt_multiplot" respawn="false" 
-    args="--multiplot-config $(find differential_gt)/config/state_control_multiplot.xml --multiplot-run-all " />
+    args="--multiplot-config $(find differential_gt)/config/state_control_multiplot1.xml --multiplot-run-all " />
 
 </launch>
