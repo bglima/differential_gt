@@ -84,7 +84,7 @@ int main(int argc, char **argv)
      // In this case, the n_dofs variable is extended to 6. The parameters that are modified come from the 
      // gt_traj_arbitration package of Paolo Franceschi's repository (https://github.com/paolofrance/gt_traj_arbitration)
      int n_dofs = 6;
-     double dt = 1/125;
+     double dt = 0.01;
      
      // In this case, M_PI = 3.14159 
      std::vector<double> time = range(0.0, 6 * M_PI - dt, dt);
@@ -103,17 +103,21 @@ int main(int argc, char **argv)
 
      for (int i = 0; i<time.size(); i++)
      {
-          ref_h(i) = 0.5*std::sin(time[i]);
+          ref_h(i) = std::sin(time[i]);
           
           if (i <= time.size() / 3)
           ref_r(i) = 0;
 
           else if (i <= 2 * time.size() / 3)
-          ref_r(i) = 0.5*std::sin(time[i]);
+          ref_r(i) = std::sin(time[i]);
 
           else
-          ref_r(i) = -0.5*std::sin(time[i]);
+          ref_r(i) = -std::sin(time[i]);
      }
+
+     // Defining the Identity and Null Matrices
+     Eigen::MatrixXd O; O.resize(n_dofs, n_dofs); O.setZero();
+     Eigen::MatrixXd I; I.resize(n_dofs, n_dofs); I.setIdentity();
 
      // Defining the REF_H matrix that stores, in each column, the human reference defined above for each dof (6).
      Eigen::MatrixXd REF_H; REF_H.resize(ref_h.size(), n_dofs);
@@ -136,19 +140,9 @@ int main(int argc, char **argv)
      Eigen::MatrixXd K; K.resize(n_dofs, n_dofs);
 
      // Inizialization of system matrices
-     M << 10, 0, 0, 0, 0, 0,
-          0, 10, 0, 0, 0, 0,
-          0, 0, 10, 0, 0, 0, 
-          0, 0, 0, 10, 0, 0, 
-          0, 0, 0, 0, 10, 0,
-          0, 0, 0, 0, 0, 10;
+     M << 10*I;
 
-     K << 100, 0, 0, 0, 0, 0,
-          0, 100, 0, 0, 0, 0,
-          0, 0, 100, 0, 0, 0, 
-          0, 0, 0, 10, 0, 0, 
-          0, 0, 0, 0, 10, 0,
-          0, 0, 0, 0, 0, 10;
+     K << O;
      
      D << 50, 0, 0, 0, 0, 0,
           0, 50, 0, 0, 0, 0,
@@ -156,10 +150,6 @@ int main(int argc, char **argv)
           0, 0, 0, 10, 0, 0, 
           0, 0, 0, 0, 10, 0,
           0, 0, 0, 0, 0, 10; 
-
-     // Defining the Identity and Null Matrices
-     Eigen::MatrixXd O; O.resize(n_dofs, n_dofs); O.setZero();
-     Eigen::MatrixXd I; I.resize(n_dofs, n_dofs); I.setIdentity();
 
      // Initialize the linearized state space matrices
      Ac << O, I,
@@ -196,40 +186,20 @@ int main(int argc, char **argv)
   
      // Human state-error-weight cost component based on human references. 
      // I also checked another paper of Paolo Franceschi at this link: https://arxiv.org/pdf/2307.10739
-     Qhh << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0.0001, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0.0001, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0.0001, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0001, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0001, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0001;
+     Qhh << I, O,
+            O, 0.0001*I;
 
      // Human state-error-weight cost component based on robot references.
      // I also checked another paper of Paolo Franceschi at this link: https://arxiv.org/pdf/2307.10739
      Qhr << O, O,
-            O, O;
+            O, 0.0001*I;
 
      // Robot state-error-weight cost component based on robot references.
-     Qrr << 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0.0001, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0.0001, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0.0001, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0001, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0001, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0001;;
+     Qrr << I, O,
+            O, 0.0001*I;
 
      // Robot state-error-weight cost component based on human references.
-     Qrh << O, O,
+     Qrh << 0.0001*I, O,
             O, O;
      
      // Initialize the control-input cost matrices
@@ -384,6 +354,7 @@ int main(int argc, char **argv)
      long double current_time = 0;
 
      ROS_INFO_STREAM("The controller is initialized. Press ENTER to start the demo.");
+     std::cin.get();
 
      // Main loop
      while (ros::ok())
@@ -493,10 +464,10 @@ int main(int argc, char **argv)
           // Human reference orientations
           Eigen::Vector4d human_reference_orientation_quaternion;
           human_reference_orientation_quaternion = from_euler_to_quaternion(rh(3), rh(4), rh(5));
-          // human_reference_pose_msg.pose.orientation.x = human_reference_orientation_quaternion[0];
-          // human_reference_pose_msg.pose.orientation.y = human_reference_orientation_quaternion[1];
-          // human_reference_pose_msg.pose.orientation.z = human_reference_orientation_quaternion[2];
-          // human_reference_pose_msg.pose.orientation.w = human_reference_orientation_quaternion[3];
+          human_reference_pose_msg.pose.orientation.x = human_reference_orientation_quaternion[0];
+          human_reference_pose_msg.pose.orientation.y = human_reference_orientation_quaternion[1];
+          human_reference_pose_msg.pose.orientation.z = human_reference_orientation_quaternion[2];
+          human_reference_pose_msg.pose.orientation.w = human_reference_orientation_quaternion[3];
 
 
           // Robot reference positions

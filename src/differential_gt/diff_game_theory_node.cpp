@@ -149,7 +149,7 @@ int main(int argc, char **argv)
      Eigen::MatrixXd Rr; Rr.resize(n_dofs,n_dofs); Rr << .0001;
 
      // Subscribing to a topic called '/alpha' so that we can have the alpha parameter coming from an external node. 
-     ros::Subscriber alpha_sub = n.subscribe("/alpha_topic", 1000, alphaCallback);
+     ros::Subscriber alpha_sub = n.subscribe("/alpha", 1000, alphaCallback);
      cgt.setAlpha(alpha);
 
      /* SET THE DIFF GAME THEORY PARAMETERS*/
