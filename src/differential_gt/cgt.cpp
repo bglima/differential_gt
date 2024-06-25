@@ -69,11 +69,11 @@ bool CoopGT::getSysParams(Eigen::MatrixXd& A,Eigen::MatrixXd& B,Eigen::MatrixXd&
 
   // // Print the System Parameters for the Cooperative case.
 
-  // std::cout<<"SYSTEM PARAMETERS COOPERATIVE CASE: \n";
+  std::cout<<"SYSTEM PARAMETERS COOPERATIVE CASE: \n";
 
-  // ROS_INFO_STREAM("A: \n" << A << "\n");
-  // ROS_INFO_STREAM("B: \n" << B << "\n");
-  // ROS_INFO_STREAM("C: \n" << C << "\n"); 
+  ROS_INFO_STREAM("A: \n" << A << "\n");
+  ROS_INFO_STREAM("B: \n" << B << "\n");
+  ROS_INFO_STREAM("C: \n" << C << "\n"); 
   
   return true;
 }
@@ -114,18 +114,18 @@ bool CoopGT::getCostMatrices(Eigen::MatrixXd& Q1,
 
   // // Print the Cooperative cost matrices.
 
-  // std::cout<< "COST PARAMETERS COOPERATIVE CASE: \n";
+  std::cout<< "COST PARAMETERS COOPERATIVE CASE: \n";
   
-  // ROS_INFO_STREAM("Q11: \n" << Q11_ << "\n");
-  // ROS_INFO_STREAM("Q12: \n" << Q12_ << "\n");
-  // ROS_INFO_STREAM("Q21: \n" << Q21_ << "\n");
-  // ROS_INFO_STREAM("Q22: \n" << Q22_ << "\n");
-  // ROS_INFO_STREAM("Q1: \n" << Q1 << "\n");
-  // ROS_INFO_STREAM("Q2: \n" << Q2 << "\n");
-  // ROS_INFO_STREAM("R1: \n" << R1 << "\n");
-  // ROS_INFO_STREAM("R2: \n" << R2 << "\n");
-  // ROS_INFO_STREAM("QGT: \n" << Q_gt_ << "\n");
-  // ROS_INFO_STREAM("RGT: \n" << R_gt_ << "\n");
+  ROS_INFO_STREAM("Q11: \n" << Q11_ << "\n");
+  ROS_INFO_STREAM("Q12: \n" << Q12_ << "\n");
+  ROS_INFO_STREAM("Q21: \n" << Q21_ << "\n");
+  ROS_INFO_STREAM("Q22: \n" << Q22_ << "\n");
+  ROS_INFO_STREAM("Q1: \n" << Q1 << "\n");
+  ROS_INFO_STREAM("Q2: \n" << Q2 << "\n");
+  ROS_INFO_STREAM("R1: \n" << R1 << "\n");
+  ROS_INFO_STREAM("R2: \n" << R2 << "\n");
+  ROS_INFO_STREAM("QGT: \n" << Q_gt_ << "\n");
+  ROS_INFO_STREAM("RGT: \n" << R_gt_ << "\n");
   
   return true;
 }
@@ -181,8 +181,9 @@ void CoopGT::updateGTMatrices(const double& alpha)
 
 Eigen::VectorXd CoopGT::getCurrentState()
 {
-  // std::cout << "CURRENT STATE COOPERATIVE CASE:\n";
-  // ROS_INFO_STREAM("X:\n" << X_ << "\n");
+
+  std::cout << "CURRENT STATE COOPERATIVE CASE:\n";
+  ROS_INFO_STREAM("X:\n" << X_ << "\n");
 
   return X_;
 };
@@ -223,9 +224,9 @@ Eigen::MatrixXd CoopGT::getCooperativeGains()
   if(!gains_set_)
     ROS_WARN_STREAM("gains have not yet been computed ! ");
 
-  // // Print the K_gt matrix
-  // std::cout << "GAIN MATRIX COOPERATIVE CASE: \n";
-  // ROS_INFO_STREAM("K_cgt: \n" << K_cgt_ << "\n");
+  // Print the K_gt matrix
+  std::cout << "GAIN MATRIX COOPERATIVE CASE: \n";
+  ROS_INFO_STREAM("K_cgt: \n" << K_cgt_ << "\n");
 
   return K_cgt_;
 }
@@ -253,7 +254,7 @@ bool CoopGT::setReference(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& r
 {
   if(ref_1.size()<2*n_dofs_ || ref_2.size()<2*n_dofs_)
   {
-    ROS_ERROR_STREAM("reference vectors have wrong length. Expected: "<<2*n_dofs_<<", got ref_1: "<<ref_1.size()<<" and ref_2: "<<ref_2.size() );
+    ROS_ERROR_STREAM("reference vectors have wrong length. Expected: " << 2*n_dofs_ << ", got ref_1: " << ref_1.size() << " and ref_2: " << ref_2.size());
     return false;
   }
     
@@ -266,9 +267,9 @@ bool CoopGT::setReference(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& r
 Eigen::VectorXd CoopGT::getReference()
 {
 
-  // // print the weigthed reference
-  // std::cout << "WEIGHTED REFERENCE COOPERATIVE CASE: \n";
-  // ROS_INFO_STREAM("weighted_reference: \n" << reference_ << "\n");
+  // print the weigthed reference
+  std::cout << "WEIGHTED REFERENCE COOPERATIVE CASE: \n";
+  ROS_INFO_STREAM("weighted_reference: \n" << reference_ << "\n");
 
   return reference_;
 }
@@ -359,24 +360,31 @@ Eigen::VectorXd CoopGT::computeControlInputs()
   reference_ok_ = false;
   
   Eigen::VectorXd control = -K_cgt_ * X_ + K_cgt_ * reference_;
-  if(n_dofs_>3)
-  {
-    control(3) = 0;
-    control(4)= 0;
+
+  // // I comment this part at the moment since I don't why there wasit before.
+  // if(n_dofs_>3)
+  // {
+  //   control(3) = 0;
+  //   control(4) = 0;
     
-    control(9) = 0;
-    control(10)= 0;
-  }
+  //   control(9) = 0;
+  //   control(10) = 0;
+  // }
+
   return control;
 }
 
 void CoopGT::getControlInput(Eigen::VectorXd& control)
 {
+  // Remember that the whole control vector is defined by two subvectors:
+  // the first six elements are related to the weighted control of the human, 
+  // while the remaining six are the ones related to the weighted control of the robot.
+
   control = -K_cgt_ * X_ + K_cgt_ * reference_;
 
-  // // print the cooperative control input
-  // std::cout << "COOPERATIVE CONTROL INPUT: \n";
-  // ROS_INFO_STREAM("control input: \n" << control << "\n");
+  // print the cooperative control input
+  std::cout << "COOPERATIVE CONTROL INPUT (The first six elements are related to the u_human, while the remaining six are related to the u_robot): \n";
+  ROS_INFO_STREAM("control input: \n" << control << "\n");
 
 }
 

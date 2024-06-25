@@ -1,0 +1,8 @@
+prefix=/usr/local
+
+Name: differential_gt
+Description: Description of differential_gt
+Version: 0.0.0
+Cflags: -I${prefix}/include -I/usr/include/eigen3
+Libs: -L${prefix}/lib -lcgt -lncgt
+Requires: 

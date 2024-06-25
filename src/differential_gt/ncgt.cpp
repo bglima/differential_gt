@@ -67,11 +67,11 @@ bool NonCoopGT::getSysParams(Eigen::MatrixXd& A,Eigen::MatrixXd& B,Eigen::Matrix
 
   // // Print the System Parameters for the Non-cooperative case.
 
-  // std::cout<<"SYSTEM PARAMETERS NON-COOPERATIVE CASE: \n";
+  std::cout<<"SYSTEM PARAMETERS NON-COOPERATIVE CASE: \n";
 
-  // ROS_INFO_STREAM("A: \n" << A << "\n");
-  // ROS_INFO_STREAM("B: \n" << B << "\n");
-  // ROS_INFO_STREAM("C: \n" << C << "\n"); 
+  ROS_INFO_STREAM("A: \n" << A << "\n");
+  ROS_INFO_STREAM("B: \n" << B << "\n");
+  ROS_INFO_STREAM("C: \n" << C << "\n"); 
   
   return true;
 }
@@ -114,14 +114,14 @@ bool NonCoopGT::getCostMatrices(Eigen::MatrixXd& Q1,Eigen::MatrixXd& Q2,Eigen::M
 
   // // Print the Non-cooperative cost matrices.
 
-  // std::cout<< "COST PARAMETERS NON-COOPERATIVE CASE: \n";
+  std::cout<< "COST PARAMETERS NON-COOPERATIVE CASE: \n";
   
-  // ROS_INFO_STREAM("Q1: \n"<< Q1 << "\n");
-  // ROS_INFO_STREAM("Q2: \n"<< Q2 << "\n");
-  // ROS_INFO_STREAM("R1: \n"<< R1 << "\n");
-  // ROS_INFO_STREAM("R2: \n"<< R2 << "\n");
-  // ROS_INFO_STREAM("R12: \n"<< R12_ << "\n");
-  // ROS_INFO_STREAM("R21: \n"<< R21_ << "\n");
+  ROS_INFO_STREAM("Q1: \n"<< Q1 << "\n");
+  ROS_INFO_STREAM("Q2: \n"<< Q2 << "\n");
+  ROS_INFO_STREAM("R1: \n"<< R1 << "\n");
+  ROS_INFO_STREAM("R2: \n"<< R2 << "\n");
+  ROS_INFO_STREAM("R12: \n"<< R12_ << "\n");
+  ROS_INFO_STREAM("R21: \n"<< R21_ << "\n");
 
   return true;
 }
@@ -141,8 +141,8 @@ bool NonCoopGT::setCurrentState(const Eigen::VectorXd& x)
 
 Eigen::VectorXd NonCoopGT::getCurrentState()
 {
-  // std::cout << "CURRENT STATE NON-COOPERATIVE CASE:\n";
-  // ROS_INFO_STREAM("X:\n" << X_ << "\n");
+  std::cout << "CURRENT STATE NON-COOPERATIVE CASE:\n";
+  ROS_INFO_STREAM("X:\n" << X_ << "\n");
 
   return X_;  
 };
@@ -161,11 +161,10 @@ void NonCoopGT::getNonCooperativeGains(Eigen::MatrixXd& K1, Eigen::MatrixXd& K2)
   if(!gains_set_)
     ROS_WARN_STREAM("gains have not yet been computed ! ");
 
-  // // Print the Non-Cooperative Gains
-
-  // std::cout << "GAIN MATRICES NON COOPERATIVE CASE: \n";
-  // ROS_INFO_STREAM("K1: \n" << K_1_ << "\n");
-  // ROS_INFO_STREAM("K2: \n" << K_2_ << "\n");
+  // Print the Non-Cooperative Gains
+  std::cout << "GAIN MATRICES NON COOPERATIVE CASE: \n";
+  ROS_INFO_STREAM("K1: \n" << K_1_ << "\n");
+  ROS_INFO_STREAM("K2: \n" << K_2_ << "\n");
   
   K1 = K_1_;
   K2 = K_2_;
@@ -194,7 +193,7 @@ bool NonCoopGT::setReference(const Eigen::VectorXd& ref_1, const Eigen::VectorXd
 {
   if(ref_1.size()<2*n_dofs_ || ref_2.size()<2*n_dofs_)
   {
-    ROS_ERROR_STREAM("reference vectors have wrong length. Expected: "<<2*n_dofs_<<", got ref_1: "<<ref_1.size()<<" and ref_2: "<<ref_2.size() );
+    ROS_ERROR_STREAM("reference vectors have wrong length. Expected: " << 2*n_dofs_ << ", got ref_1: " << ref_1.size() << " and ref_2: " << ref_2.size());
     return false;
   }
   
@@ -210,26 +209,27 @@ void NonCoopGT::getReference(Eigen::VectorXd& ref_1, Eigen::VectorXd& ref_2)
   ref_1 = ref_1_;
   ref_2 = ref_2_;
 
-  // // print the human reference
-  // std::cout << "HUMAN REFERENCE NON-COOPERATIVE CASE: \n";
-  // ROS_INFO_STREAM("Human reference: \n" << ref_1 << "\n");
+  // print the human reference
+  std::cout << "HUMAN REFERENCE NON-COOPERATIVE CASE: \n";
+  ROS_INFO_STREAM("Human reference: \n" << ref_1 << "\n");
 
-  // // print the robot reference
-  // std::cout << "ROBOT REFERENCE NON-COOPERATIVE CASE: \n";
-  // ROS_INFO_STREAM("robot reference: \n" << ref_2 << "\n");
+  // print the robot reference
+  std::cout << "ROBOT REFERENCE NON-COOPERATIVE CASE: \n";
+  ROS_INFO_STREAM("robot reference: \n" << ref_2 << "\n");
 }
 
 void NonCoopGT::getControlInput(Eigen::VectorXd& control)
 {
+
   Eigen::VectorXd u_1 = -K_1_ * (X_ - ref_1_);
   Eigen::VectorXd u_2 = -K_2_ * (X_ - ref_2_);
 
   control.resize(2*n_dofs_);
   control << u_1,u_2;
 
-  // // print the non-cooperative control inputs in a unique vector
-  // std::cout << "NON-COOPERATIVE CONTROL INPUT VECTOR: \n";
-  // ROS_INFO_STREAM("control input: \n" << control << "\n");
+  // Print the non-cooperative control inputs in a unique vector
+  std::cout << "NON-COOPERATIVE CONTROL INPUT VECTOR (The first six elements are related to the u_human, while the remaining six are related to the u_robot): \n";
+  ROS_INFO_STREAM("control input: \n" << control << "\n");
 
 }
 
@@ -334,16 +334,20 @@ Eigen::VectorXd  NonCoopGT::computeControlInputs()
   Eigen::VectorXd u2 = -K_2_ * (X_ - ref_2_);
   
   Eigen::VectorXd control; control.resize(2*n_dofs_);
+
+  // Here below, the two controls are merged in one unique control vector, as in the case of the cooperative solution. 
+  // The main difference is that, in the cooperative case, the control vector is computed already merged, while in 
+  // this case the merging of the two control vector is computed after the calculations.
+  
   control << u1,
              u2;
              
-  if(n_dofs_>3)
-  {
-    control(9) = 0;
-    control(10)= 0;
-  }
-
-             
+  // if(n_dofs_>3)
+  // {
+  //   control(9) = 0;
+  //   control(10)= 0;
+  // }
+ 
   return control;
 }
 

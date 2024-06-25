@@ -1,0 +1,8 @@
+prefix=/home/lorenzo/my_workspace/src/differential_gt/build/devel
+
+Name: differential_gt
+Description: Description of differential_gt
+Version: 0.0.0
+Cflags: -I/home/lorenzo/my_workspace/src/differential_gt/include -I/usr/include/eigen3
+Libs: -L${prefix}/lib -lcgt -lncgt
+Requires: 
