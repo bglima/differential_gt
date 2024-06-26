@@ -89,9 +89,9 @@ int main(int argc, char **argv)
      double m,c,k;
      // Initialize the impedance parameters in the original formulation
      
-     m=10;
-     k=0;
-     c=25;
+     m = 10; // [Kg]
+     k = 0; // [N/m]
+     c = 25; // [Ns/m]
      
      // Initialize the linearized state space matrices
      Ac << 0, 1,

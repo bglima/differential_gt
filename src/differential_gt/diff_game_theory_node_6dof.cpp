@@ -97,22 +97,14 @@ int main(int argc, char **argv)
      /* 
       We will have three intervals of 2*pi here
       (1) In the first interval, the robot reference will be zero.
-      (2) In the second interval, the robot reference will be the same as the human.
-      (3) In the last interval, the robot reference will be the reverse of the human
+      (2) In the second interval, the robot reference will be 0.5
+      (3) In the last interval, the robot reference will be the same of the human one.
      */
 
      for (int i = 0; i<time.size(); i++)
      {
-          ref_h(i) = std::sin(time[i]);
-          
-          if (i <= time.size() / 3)
+          ref_h(i) = 1;
           ref_r(i) = 0;
-
-          else if (i <= 2 * time.size() / 3)
-          ref_r(i) = std::sin(time[i]);
-
-          else
-          ref_r(i) = -std::sin(time[i]);
      }
 
      // Defining the Identity and Null Matrices
@@ -122,12 +114,12 @@ int main(int argc, char **argv)
      // Defining the REF_H matrix that stores, in each column, the human reference defined above for each dof (6).
      Eigen::MatrixXd REF_H; REF_H.resize(ref_h.size(), n_dofs);
      REF_H << ref_h, ref_h, ref_h, ref_h, ref_h, ref_h;
-     ROS_INFO_STREAM("REF_H: \n" << REF_H << "\n");
+     // ROS_INFO_STREAM("REF_H: \n" << REF_H << "\n");
 
      // Defining the REF_R matrix that stores, in each column, the robot reference defined above for each dof (6).
      Eigen::MatrixXd REF_R; REF_R.resize(ref_r.size(), n_dofs);
      REF_R << ref_r, ref_r, ref_r, ref_r, ref_r, ref_r;
-     ROS_INFO_STREAM("REF_R: \n" << REF_R << "\n");
+     // ROS_INFO_STREAM("REF_R: \n" << REF_R << "\n");
 
      // Here the system matrices are defined
      Eigen::MatrixXd Ac; Ac.resize(2*n_dofs,2*n_dofs);
@@ -144,10 +136,10 @@ int main(int argc, char **argv)
 
      K << O;
      
-     D << 50, 0, 0, 0, 0, 0,
-          0, 50, 0, 0, 0, 0,
-          0, 0, 50, 0, 0, 0, 
-          0, 0, 0, 10, 0, 0, 
+     D << 25, 0, 0, 0, 0, 0,
+          0, 25, 0, 0, 0, 0,
+          0, 0, 25, 0, 0, 0,
+          0, 0, 0, 10, 0, 0,
           0, 0, 0, 0, 10, 0,
           0, 0, 0, 0, 0, 10; 
 
@@ -192,14 +184,14 @@ int main(int argc, char **argv)
      // Human state-error-weight cost component based on robot references.
      // I also checked another paper of Paolo Franceschi at this link: https://arxiv.org/pdf/2307.10739
      Qhr << O, O,
-            O, 0.0001*I;
+            O, O;
 
      // Robot state-error-weight cost component based on robot references.
      Qrr << I, O,
             O, 0.0001*I;
 
      // Robot state-error-weight cost component based on human references.
-     Qrh << 0.0001*I, O,
+     Qrh << O, O,
             O, O;
      
      // Initialize the control-input cost matrices
@@ -353,15 +345,13 @@ int main(int argc, char **argv)
      int reference_index = 0;
      long double current_time = 0;
 
-     ROS_INFO_STREAM("The controller is initialized. Press ENTER to start the demo.");
-     std::cin.get();
+     ROS_INFO_STREAM("The controller is initialized. The demo starts now.");
 
      // Main loop
      while (ros::ok())
      {
           // All these functions are placed here in order to re-compute the values of the gain matrices and the corresponding control inputs
           // Depeding on the value of the alpha parameter that is passed through a topic.
-
           cgt.setAlpha(alpha);
           cgt.setCostsParams(Qhh,Qhr,Qrh,Qrr,Rh,Rr);
           cgt.getCostMatrices(Qh,Qr,Rh,Rr);
@@ -517,7 +507,7 @@ int main(int argc, char **argv)
                state_pose_msg.pose.position.y = ncgt_state(1);
                state_pose_msg.pose.position.z = ncgt_state(2);
                Eigen::Vector4d state_pose_orientation_quaternion;
-               state_pose_orientation_quaternion = from_euler_to_quaternion(cgt_state(3), cgt_state(4), cgt_state(5));
+               state_pose_orientation_quaternion = from_euler_to_quaternion(ncgt_state(3), ncgt_state(4), ncgt_state(5));
                state_pose_msg.pose.orientation.x = state_pose_orientation_quaternion[0];
                state_pose_msg.pose.orientation.y = state_pose_orientation_quaternion[1];
                state_pose_msg.pose.orientation.z = state_pose_orientation_quaternion[2];
