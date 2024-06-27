@@ -35,7 +35,7 @@
                                         <relative_minimum>-15</relative_minimum>
                                         <type>2</type>
                                     </scale>
-                                    <topic>/cartesian_impedance_example_controller/equilibrium_pose</topic>
+                                    <topic>/cartesian_pose_controller/cartesian_reference_pose</topic>
                                     <type>geometry_msgs/PoseStamped</type>
                                 </x_axis>
                                 <y_axis>
@@ -48,7 +48,7 @@
                                         <relative_minimum>-1000</relative_minimum>
                                         <type>1</type>
                                     </scale>
-                                    <topic>/cartesian_impedance_example_controller/equilibrium_pose</topic>
+                                    <topic>/cartesian_pose_controller/cartesian_reference_pose</topic>
                                     <type>geometry_msgs/PoseStamped</type>
                                 </y_axis>
                             </axes>
@@ -72,7 +72,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>x</title>
+                            <title>commanded x</title>
                         </curve_0>
                         <curve_1>
                             <axes>

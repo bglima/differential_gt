@@ -17,13 +17,13 @@ def talker():
         t_now = rospy.Time.now()
         time_interval = t_now - t
 
-        human_reference.pose.position.x = 1
-        human_reference.pose.position.y = 1
-        human_reference.pose.position.z = 1
-        human_reference.pose.orientation.x = 1
-        human_reference.pose.orientation.y = 0
-        human_reference.pose.orientation.z = 0
-        human_reference.pose.orientation.w = 0
+        human_reference.pose.position.x = 0.3072
+        human_reference.pose.position.y = 1.6e-05
+        human_reference.pose.position.z = 0.482591
+        human_reference.pose.orientation.x = 0.99998
+        human_reference.pose.orientation.y = 0.0062
+        human_reference.pose.orientation.z = -3e-05
+        human_reference.pose.orientation.w = -0.00155
         print("-------")
         rospy.loginfo(time_interval.to_sec())
         rospy.loginfo(human_reference)

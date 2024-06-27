@@ -11,6 +11,11 @@
   
   <depend>roscpp</depend>
   <depend>geometry_msgs</depend>
+  <depend>franka_msgs</depend>
+  <depend>tf2_eigen</depend>
+  <depend>eigen_conversions</depend>
+  <depend>tf_conversions</depend>
+
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

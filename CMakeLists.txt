@@ -11,6 +11,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(catkin REQUIRED COMPONENTS
 roscpp
+franka_msgs
+tf2_ros
+tf2_eigen
+eigen_conversions
+tf_conversions
 )
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
