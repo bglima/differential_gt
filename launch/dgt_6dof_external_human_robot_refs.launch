@@ -1,0 +1,16 @@
+<launch>
+  <!-- Lunch diff_game_theory node -->
+  <node name="diff_game_theory_node_6dof_external_human_robot_refs" pkg="differential_gt" type="dgtn_6dof_external_human_robot_refs" respawn="false" 
+    args="" output="screen" />
+
+  <!-- Plot controller's state -->
+  <node name="diff_game_theory_controller_state" pkg="rqt_multiplot" type="rqt_multiplot" respawn="false" 
+    args="--multiplot-config $(find differential_gt)/config/diff_game_theory_controller_state_6dof_x_case_multiplot.xml --multiplot-run-all " />
+  <!-- Plot Gazebo's estimated forces -->  
+  <node name="estimated_forces" pkg="rqt_multiplot" type="rqt_multiplot" respawn="false" 
+    args="--multiplot-config $(find differential_gt)/config/estimated_forces_multiplot.xml --multiplot-run-all " />
+  <!-- Plot Gazebo's state_pose -->  
+  <node name="joints_states_velocities_efforts" pkg="rqt_multiplot" type="rqt_multiplot" respawn="false" 
+    args="--multiplot-config $(find differential_gt)/config/joints_states_velocities_efforts_multiplot.xml --multiplot-run-all " />
+
+</launch>

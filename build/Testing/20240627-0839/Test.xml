@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Site BuildName="(empty)"
-	BuildStamp="20240626-0940-Experimental"
+	BuildStamp="20240627-0839-Experimental"
 	Name="lorenzo-750XDA"
 	Generator="ctest-3.16.3"
 	CompilerName="/usr/bin/c++"
@@ -21,14 +21,14 @@
 	TotalVirtualMemory="2047"
 	TotalPhysicalMemory="7659"
 	LogicalProcessorsPerPhysical="2"
-	ProcessorClockFrequency="2400"
+	ProcessorClockFrequency="3744.06"
 	>
 	<Testing>
-		<StartDateTime>Jun 26 21:39 CEST</StartDateTime>
-		<StartTestTime>1719430767</StartTestTime>
+		<StartDateTime>Jun 27 10:39 CEST</StartDateTime>
+		<StartTestTime>1719477595</StartTestTime>
 		<TestList/>
-		<EndDateTime>Jun 26 21:39 CEST</EndDateTime>
-		<EndTestTime>1719430767</EndTestTime>
+		<EndDateTime>Jun 27 10:39 CEST</EndDateTime>
+		<EndTestTime>1719477595</EndTestTime>
 		<ElapsedMinutes>0</ElapsedMinutes>
 	</Testing>
 </Site>

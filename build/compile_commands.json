@@ -1,8 +1,8 @@
 [
 {
   "directory": "/home/lorenzo/my_workspace/src/differential_gt/build",
-  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"differential_gt\\\" -I/home/lorenzo/my_workspace/src/differential_gt/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -isystem /usr/include/eigen3  -g   -std=c++14 -o CMakeFiles/diff_game_theory_node.dir/src/differential_gt/diff_game_theory_node.cpp.o -c /home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/diff_game_theory_node.cpp",
-  "file": "/home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/diff_game_theory_node.cpp"
+  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"differential_gt\\\" -I/home/lorenzo/my_workspace/src/differential_gt/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -isystem /usr/include/eigen3  -g   -std=c++14 -o CMakeFiles/dgtn_original_demo.dir/src/differential_gt/dgtn_original_demo.cpp.o -c /home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/dgtn_original_demo.cpp",
+  "file": "/home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/dgtn_original_demo.cpp"
 },
 {
   "directory": "/home/lorenzo/my_workspace/src/differential_gt/build",
@@ -11,18 +11,8 @@
 },
 {
   "directory": "/home/lorenzo/my_workspace/src/differential_gt/build",
-  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"differential_gt\\\" -I/home/lorenzo/my_workspace/src/differential_gt/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -isystem /usr/include/eigen3  -g   -std=c++14 -o CMakeFiles/diff_game_theory_node_6dof.dir/src/differential_gt/diff_game_theory_node_6dof.cpp.o -c /home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/diff_game_theory_node_6dof.cpp",
-  "file": "/home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/diff_game_theory_node_6dof.cpp"
-},
-{
-  "directory": "/home/lorenzo/my_workspace/src/differential_gt/build",
   "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"differential_gt\\\" -Dncgt_EXPORTS -I/home/lorenzo/my_workspace/src/differential_gt/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -isystem /usr/include/eigen3  -g -fPIC   -std=c++14 -o CMakeFiles/ncgt.dir/src/differential_gt/ncgt.cpp.o -c /home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/ncgt.cpp",
   "file": "/home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/ncgt.cpp"
-},
-{
-  "directory": "/home/lorenzo/my_workspace/src/differential_gt/build",
-  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"differential_gt\\\" -I/home/lorenzo/my_workspace/src/differential_gt/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -isystem /usr/include/eigen3  -g   -std=c++14 -o CMakeFiles/dgt_node.dir/src/differential_gt/dgt_node.cpp.o -c /home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/dgt_node.cpp",
-  "file": "/home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/dgt_node.cpp"
 },
 {
   "directory": "/home/lorenzo/my_workspace/src/differential_gt/build",
@@ -31,8 +21,23 @@
 },
 {
   "directory": "/home/lorenzo/my_workspace/src/differential_gt/build",
+  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"differential_gt\\\" -I/home/lorenzo/my_workspace/src/differential_gt/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -isystem /usr/include/eigen3  -g   -std=c++14 -o CMakeFiles/dgtn_6dof_external_human_robot_refs.dir/src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp.o -c /home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp",
+  "file": "/home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp"
+},
+{
+  "directory": "/home/lorenzo/my_workspace/src/differential_gt/build",
   "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"differential_gt\\\" -I/home/lorenzo/my_workspace/src/differential_gt/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -isystem /usr/include/eigen3  -g   -std=c++14 -o CMakeFiles/cgt_ros_node.dir/src/differential_gt/cgt_ros_node.cpp.o -c /home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/cgt_ros_node.cpp",
   "file": "/home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/cgt_ros_node.cpp"
+},
+{
+  "directory": "/home/lorenzo/my_workspace/src/differential_gt/build",
+  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"differential_gt\\\" -I/home/lorenzo/my_workspace/src/differential_gt/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -isystem /usr/include/eigen3  -g   -std=c++14 -o CMakeFiles/dgtn.dir/src/differential_gt/dgtn.cpp.o -c /home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/dgtn.cpp",
+  "file": "/home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/dgtn.cpp"
+},
+{
+  "directory": "/home/lorenzo/my_workspace/src/differential_gt/build",
+  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"differential_gt\\\" -I/home/lorenzo/my_workspace/src/differential_gt/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -isystem /usr/include/eigen3  -g   -std=c++14 -o CMakeFiles/dgtn_6dof.dir/src/differential_gt/dgtn_6dof.cpp.o -c /home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/dgtn_6dof.cpp",
+  "file": "/home/lorenzo/my_workspace/src/differential_gt/src/differential_gt/dgtn_6dof.cpp"
 },
 {
   "directory": "/home/lorenzo/my_workspace/src/differential_gt/build/gtest/googlemock",

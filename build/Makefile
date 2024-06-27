@@ -90,6 +90,17 @@ list_install_components/fast: list_install_components
 
 .PHONY : list_install_components/fast
 
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
+	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+.PHONY : edit_cache
+
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
+
+.PHONY : edit_cache/fast
+
 # Special rule for the target install/local
 install/local: preinstall
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
@@ -123,17 +134,6 @@ test:
 test/fast: test
 
 .PHONY : test/fast
-
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
-	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
-.PHONY : edit_cache
-
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
-
-.PHONY : edit_cache/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -194,19 +194,6 @@ std_msgs_generate_messages_eus/fast:
 .PHONY : std_msgs_generate_messages_eus/fast
 
 #=============================================================================
-# Target rules for targets named diff_game_theory_node
-
-# Build rule for target.
-diff_game_theory_node: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 diff_game_theory_node
-.PHONY : diff_game_theory_node
-
-# fast build rule for target.
-diff_game_theory_node/fast:
-	$(MAKE) -f CMakeFiles/diff_game_theory_node.dir/build.make CMakeFiles/diff_game_theory_node.dir/build
-.PHONY : diff_game_theory_node/fast
-
-#=============================================================================
 # Target rules for targets named roscpp_generate_messages_eus
 
 # Build rule for target.
@@ -218,19 +205,6 @@ roscpp_generate_messages_eus: cmake_check_build_system
 roscpp_generate_messages_eus/fast:
 	$(MAKE) -f CMakeFiles/roscpp_generate_messages_eus.dir/build.make CMakeFiles/roscpp_generate_messages_eus.dir/build
 .PHONY : roscpp_generate_messages_eus/fast
-
-#=============================================================================
-# Target rules for targets named roscpp_generate_messages_cpp
-
-# Build rule for target.
-roscpp_generate_messages_cpp: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 roscpp_generate_messages_cpp
-.PHONY : roscpp_generate_messages_cpp
-
-# fast build rule for target.
-roscpp_generate_messages_cpp/fast:
-	$(MAKE) -f CMakeFiles/roscpp_generate_messages_cpp.dir/build.make CMakeFiles/roscpp_generate_messages_cpp.dir/build
-.PHONY : roscpp_generate_messages_cpp/fast
 
 #=============================================================================
 # Target rules for targets named roscpp_generate_messages_py
@@ -324,6 +298,32 @@ std_msgs_generate_messages_lisp/fast:
 .PHONY : std_msgs_generate_messages_lisp/fast
 
 #=============================================================================
+# Target rules for targets named roscpp_generate_messages_cpp
+
+# Build rule for target.
+roscpp_generate_messages_cpp: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 roscpp_generate_messages_cpp
+.PHONY : roscpp_generate_messages_cpp
+
+# fast build rule for target.
+roscpp_generate_messages_cpp/fast:
+	$(MAKE) -f CMakeFiles/roscpp_generate_messages_cpp.dir/build.make CMakeFiles/roscpp_generate_messages_cpp.dir/build
+.PHONY : roscpp_generate_messages_cpp/fast
+
+#=============================================================================
+# Target rules for targets named dgtn_original_demo
+
+# Build rule for target.
+dgtn_original_demo: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 dgtn_original_demo
+.PHONY : dgtn_original_demo
+
+# fast build rule for target.
+dgtn_original_demo/fast:
+	$(MAKE) -f CMakeFiles/dgtn_original_demo.dir/build.make CMakeFiles/dgtn_original_demo.dir/build
+.PHONY : dgtn_original_demo/fast
+
+#=============================================================================
 # Target rules for targets named roscpp_generate_messages_lisp
 
 # Build rule for target.
@@ -361,6 +361,19 @@ tests: cmake_check_build_system
 tests/fast:
 	$(MAKE) -f CMakeFiles/tests.dir/build.make CMakeFiles/tests.dir/build
 .PHONY : tests/fast
+
+#=============================================================================
+# Target rules for targets named std_msgs_generate_messages_cpp
+
+# Build rule for target.
+std_msgs_generate_messages_cpp: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 std_msgs_generate_messages_cpp
+.PHONY : std_msgs_generate_messages_cpp
+
+# fast build rule for target.
+std_msgs_generate_messages_cpp/fast:
+	$(MAKE) -f CMakeFiles/std_msgs_generate_messages_cpp.dir/build.make CMakeFiles/std_msgs_generate_messages_cpp.dir/build
+.PHONY : std_msgs_generate_messages_cpp/fast
 
 #=============================================================================
 # Target rules for targets named std_msgs_generate_messages_nodejs
@@ -415,32 +428,6 @@ cgt/fast:
 .PHONY : cgt/fast
 
 #=============================================================================
-# Target rules for targets named std_msgs_generate_messages_cpp
-
-# Build rule for target.
-std_msgs_generate_messages_cpp: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 std_msgs_generate_messages_cpp
-.PHONY : std_msgs_generate_messages_cpp
-
-# fast build rule for target.
-std_msgs_generate_messages_cpp/fast:
-	$(MAKE) -f CMakeFiles/std_msgs_generate_messages_cpp.dir/build.make CMakeFiles/std_msgs_generate_messages_cpp.dir/build
-.PHONY : std_msgs_generate_messages_cpp/fast
-
-#=============================================================================
-# Target rules for targets named diff_game_theory_node_6dof
-
-# Build rule for target.
-diff_game_theory_node_6dof: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 diff_game_theory_node_6dof
-.PHONY : diff_game_theory_node_6dof
-
-# fast build rule for target.
-diff_game_theory_node_6dof/fast:
-	$(MAKE) -f CMakeFiles/diff_game_theory_node_6dof.dir/build.make CMakeFiles/diff_game_theory_node_6dof.dir/build
-.PHONY : diff_game_theory_node_6dof/fast
-
-#=============================================================================
 # Target rules for targets named ncgt
 
 # Build rule for target.
@@ -454,32 +441,6 @@ ncgt/fast:
 .PHONY : ncgt/fast
 
 #=============================================================================
-# Target rules for targets named rosgraph_msgs_generate_messages_nodejs
-
-# Build rule for target.
-rosgraph_msgs_generate_messages_nodejs: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 rosgraph_msgs_generate_messages_nodejs
-.PHONY : rosgraph_msgs_generate_messages_nodejs
-
-# fast build rule for target.
-rosgraph_msgs_generate_messages_nodejs/fast:
-	$(MAKE) -f CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build.make CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build
-.PHONY : rosgraph_msgs_generate_messages_nodejs/fast
-
-#=============================================================================
-# Target rules for targets named dgt_node
-
-# Build rule for target.
-dgt_node: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 dgt_node
-.PHONY : dgt_node
-
-# fast build rule for target.
-dgt_node/fast:
-	$(MAKE) -f CMakeFiles/dgt_node.dir/build.make CMakeFiles/dgt_node.dir/build
-.PHONY : dgt_node/fast
-
-#=============================================================================
 # Target rules for targets named ncgt_ros_node
 
 # Build rule for target.
@@ -491,6 +452,19 @@ ncgt_ros_node: cmake_check_build_system
 ncgt_ros_node/fast:
 	$(MAKE) -f CMakeFiles/ncgt_ros_node.dir/build.make CMakeFiles/ncgt_ros_node.dir/build
 .PHONY : ncgt_ros_node/fast
+
+#=============================================================================
+# Target rules for targets named dgtn_6dof_external_human_robot_refs
+
+# Build rule for target.
+dgtn_6dof_external_human_robot_refs: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 dgtn_6dof_external_human_robot_refs
+.PHONY : dgtn_6dof_external_human_robot_refs
+
+# fast build rule for target.
+dgtn_6dof_external_human_robot_refs/fast:
+	$(MAKE) -f CMakeFiles/dgtn_6dof_external_human_robot_refs.dir/build.make CMakeFiles/dgtn_6dof_external_human_robot_refs.dir/build
+.PHONY : dgtn_6dof_external_human_robot_refs/fast
 
 #=============================================================================
 # Target rules for targets named cgt_ros_node
@@ -517,6 +491,45 @@ rosgraph_msgs_generate_messages_cpp: cmake_check_build_system
 rosgraph_msgs_generate_messages_cpp/fast:
 	$(MAKE) -f CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build.make CMakeFiles/rosgraph_msgs_generate_messages_cpp.dir/build
 .PHONY : rosgraph_msgs_generate_messages_cpp/fast
+
+#=============================================================================
+# Target rules for targets named dgtn
+
+# Build rule for target.
+dgtn: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 dgtn
+.PHONY : dgtn
+
+# fast build rule for target.
+dgtn/fast:
+	$(MAKE) -f CMakeFiles/dgtn.dir/build.make CMakeFiles/dgtn.dir/build
+.PHONY : dgtn/fast
+
+#=============================================================================
+# Target rules for targets named rosgraph_msgs_generate_messages_nodejs
+
+# Build rule for target.
+rosgraph_msgs_generate_messages_nodejs: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 rosgraph_msgs_generate_messages_nodejs
+.PHONY : rosgraph_msgs_generate_messages_nodejs
+
+# fast build rule for target.
+rosgraph_msgs_generate_messages_nodejs/fast:
+	$(MAKE) -f CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build.make CMakeFiles/rosgraph_msgs_generate_messages_nodejs.dir/build
+.PHONY : rosgraph_msgs_generate_messages_nodejs/fast
+
+#=============================================================================
+# Target rules for targets named dgtn_6dof
+
+# Build rule for target.
+dgtn_6dof: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 dgtn_6dof
+.PHONY : dgtn_6dof
+
+# fast build rule for target.
+dgtn_6dof/fast:
+	$(MAKE) -f CMakeFiles/dgtn_6dof.dir/build.make CMakeFiles/dgtn_6dof.dir/build
+.PHONY : dgtn_6dof/fast
 
 #=============================================================================
 # Target rules for targets named gmock_main
@@ -624,86 +637,113 @@ src/differential_gt/cgt_ros_node.cpp.s:
 	$(MAKE) -f CMakeFiles/cgt_ros_node.dir/build.make CMakeFiles/cgt_ros_node.dir/src/differential_gt/cgt_ros_node.cpp.s
 .PHONY : src/differential_gt/cgt_ros_node.cpp.s
 
-src/differential_gt/dgt_node.o: src/differential_gt/dgt_node.cpp.o
+src/differential_gt/dgtn.o: src/differential_gt/dgtn.cpp.o
 
-.PHONY : src/differential_gt/dgt_node.o
-
-# target to build an object file
-src/differential_gt/dgt_node.cpp.o:
-	$(MAKE) -f CMakeFiles/dgt_node.dir/build.make CMakeFiles/dgt_node.dir/src/differential_gt/dgt_node.cpp.o
-.PHONY : src/differential_gt/dgt_node.cpp.o
-
-src/differential_gt/dgt_node.i: src/differential_gt/dgt_node.cpp.i
-
-.PHONY : src/differential_gt/dgt_node.i
-
-# target to preprocess a source file
-src/differential_gt/dgt_node.cpp.i:
-	$(MAKE) -f CMakeFiles/dgt_node.dir/build.make CMakeFiles/dgt_node.dir/src/differential_gt/dgt_node.cpp.i
-.PHONY : src/differential_gt/dgt_node.cpp.i
-
-src/differential_gt/dgt_node.s: src/differential_gt/dgt_node.cpp.s
-
-.PHONY : src/differential_gt/dgt_node.s
-
-# target to generate assembly for a file
-src/differential_gt/dgt_node.cpp.s:
-	$(MAKE) -f CMakeFiles/dgt_node.dir/build.make CMakeFiles/dgt_node.dir/src/differential_gt/dgt_node.cpp.s
-.PHONY : src/differential_gt/dgt_node.cpp.s
-
-src/differential_gt/diff_game_theory_node.o: src/differential_gt/diff_game_theory_node.cpp.o
-
-.PHONY : src/differential_gt/diff_game_theory_node.o
+.PHONY : src/differential_gt/dgtn.o
 
 # target to build an object file
-src/differential_gt/diff_game_theory_node.cpp.o:
-	$(MAKE) -f CMakeFiles/diff_game_theory_node.dir/build.make CMakeFiles/diff_game_theory_node.dir/src/differential_gt/diff_game_theory_node.cpp.o
-.PHONY : src/differential_gt/diff_game_theory_node.cpp.o
+src/differential_gt/dgtn.cpp.o:
+	$(MAKE) -f CMakeFiles/dgtn.dir/build.make CMakeFiles/dgtn.dir/src/differential_gt/dgtn.cpp.o
+.PHONY : src/differential_gt/dgtn.cpp.o
 
-src/differential_gt/diff_game_theory_node.i: src/differential_gt/diff_game_theory_node.cpp.i
+src/differential_gt/dgtn.i: src/differential_gt/dgtn.cpp.i
 
-.PHONY : src/differential_gt/diff_game_theory_node.i
+.PHONY : src/differential_gt/dgtn.i
 
 # target to preprocess a source file
-src/differential_gt/diff_game_theory_node.cpp.i:
-	$(MAKE) -f CMakeFiles/diff_game_theory_node.dir/build.make CMakeFiles/diff_game_theory_node.dir/src/differential_gt/diff_game_theory_node.cpp.i
-.PHONY : src/differential_gt/diff_game_theory_node.cpp.i
+src/differential_gt/dgtn.cpp.i:
+	$(MAKE) -f CMakeFiles/dgtn.dir/build.make CMakeFiles/dgtn.dir/src/differential_gt/dgtn.cpp.i
+.PHONY : src/differential_gt/dgtn.cpp.i
 
-src/differential_gt/diff_game_theory_node.s: src/differential_gt/diff_game_theory_node.cpp.s
+src/differential_gt/dgtn.s: src/differential_gt/dgtn.cpp.s
 
-.PHONY : src/differential_gt/diff_game_theory_node.s
+.PHONY : src/differential_gt/dgtn.s
 
 # target to generate assembly for a file
-src/differential_gt/diff_game_theory_node.cpp.s:
-	$(MAKE) -f CMakeFiles/diff_game_theory_node.dir/build.make CMakeFiles/diff_game_theory_node.dir/src/differential_gt/diff_game_theory_node.cpp.s
-.PHONY : src/differential_gt/diff_game_theory_node.cpp.s
+src/differential_gt/dgtn.cpp.s:
+	$(MAKE) -f CMakeFiles/dgtn.dir/build.make CMakeFiles/dgtn.dir/src/differential_gt/dgtn.cpp.s
+.PHONY : src/differential_gt/dgtn.cpp.s
 
-src/differential_gt/diff_game_theory_node_6dof.o: src/differential_gt/diff_game_theory_node_6dof.cpp.o
+src/differential_gt/dgtn_6dof.o: src/differential_gt/dgtn_6dof.cpp.o
 
-.PHONY : src/differential_gt/diff_game_theory_node_6dof.o
+.PHONY : src/differential_gt/dgtn_6dof.o
 
 # target to build an object file
-src/differential_gt/diff_game_theory_node_6dof.cpp.o:
-	$(MAKE) -f CMakeFiles/diff_game_theory_node_6dof.dir/build.make CMakeFiles/diff_game_theory_node_6dof.dir/src/differential_gt/diff_game_theory_node_6dof.cpp.o
-.PHONY : src/differential_gt/diff_game_theory_node_6dof.cpp.o
+src/differential_gt/dgtn_6dof.cpp.o:
+	$(MAKE) -f CMakeFiles/dgtn_6dof.dir/build.make CMakeFiles/dgtn_6dof.dir/src/differential_gt/dgtn_6dof.cpp.o
+.PHONY : src/differential_gt/dgtn_6dof.cpp.o
 
-src/differential_gt/diff_game_theory_node_6dof.i: src/differential_gt/diff_game_theory_node_6dof.cpp.i
+src/differential_gt/dgtn_6dof.i: src/differential_gt/dgtn_6dof.cpp.i
 
-.PHONY : src/differential_gt/diff_game_theory_node_6dof.i
+.PHONY : src/differential_gt/dgtn_6dof.i
 
 # target to preprocess a source file
-src/differential_gt/diff_game_theory_node_6dof.cpp.i:
-	$(MAKE) -f CMakeFiles/diff_game_theory_node_6dof.dir/build.make CMakeFiles/diff_game_theory_node_6dof.dir/src/differential_gt/diff_game_theory_node_6dof.cpp.i
-.PHONY : src/differential_gt/diff_game_theory_node_6dof.cpp.i
+src/differential_gt/dgtn_6dof.cpp.i:
+	$(MAKE) -f CMakeFiles/dgtn_6dof.dir/build.make CMakeFiles/dgtn_6dof.dir/src/differential_gt/dgtn_6dof.cpp.i
+.PHONY : src/differential_gt/dgtn_6dof.cpp.i
 
-src/differential_gt/diff_game_theory_node_6dof.s: src/differential_gt/diff_game_theory_node_6dof.cpp.s
+src/differential_gt/dgtn_6dof.s: src/differential_gt/dgtn_6dof.cpp.s
 
-.PHONY : src/differential_gt/diff_game_theory_node_6dof.s
+.PHONY : src/differential_gt/dgtn_6dof.s
 
 # target to generate assembly for a file
-src/differential_gt/diff_game_theory_node_6dof.cpp.s:
-	$(MAKE) -f CMakeFiles/diff_game_theory_node_6dof.dir/build.make CMakeFiles/diff_game_theory_node_6dof.dir/src/differential_gt/diff_game_theory_node_6dof.cpp.s
-.PHONY : src/differential_gt/diff_game_theory_node_6dof.cpp.s
+src/differential_gt/dgtn_6dof.cpp.s:
+	$(MAKE) -f CMakeFiles/dgtn_6dof.dir/build.make CMakeFiles/dgtn_6dof.dir/src/differential_gt/dgtn_6dof.cpp.s
+.PHONY : src/differential_gt/dgtn_6dof.cpp.s
+
+src/differential_gt/dgtn_6dof_external_human_robot_refs.o: src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp.o
+
+.PHONY : src/differential_gt/dgtn_6dof_external_human_robot_refs.o
+
+# target to build an object file
+src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp.o:
+	$(MAKE) -f CMakeFiles/dgtn_6dof_external_human_robot_refs.dir/build.make CMakeFiles/dgtn_6dof_external_human_robot_refs.dir/src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp.o
+.PHONY : src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp.o
+
+src/differential_gt/dgtn_6dof_external_human_robot_refs.i: src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp.i
+
+.PHONY : src/differential_gt/dgtn_6dof_external_human_robot_refs.i
+
+# target to preprocess a source file
+src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp.i:
+	$(MAKE) -f CMakeFiles/dgtn_6dof_external_human_robot_refs.dir/build.make CMakeFiles/dgtn_6dof_external_human_robot_refs.dir/src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp.i
+.PHONY : src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp.i
+
+src/differential_gt/dgtn_6dof_external_human_robot_refs.s: src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp.s
+
+.PHONY : src/differential_gt/dgtn_6dof_external_human_robot_refs.s
+
+# target to generate assembly for a file
+src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp.s:
+	$(MAKE) -f CMakeFiles/dgtn_6dof_external_human_robot_refs.dir/build.make CMakeFiles/dgtn_6dof_external_human_robot_refs.dir/src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp.s
+.PHONY : src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp.s
+
+src/differential_gt/dgtn_original_demo.o: src/differential_gt/dgtn_original_demo.cpp.o
+
+.PHONY : src/differential_gt/dgtn_original_demo.o
+
+# target to build an object file
+src/differential_gt/dgtn_original_demo.cpp.o:
+	$(MAKE) -f CMakeFiles/dgtn_original_demo.dir/build.make CMakeFiles/dgtn_original_demo.dir/src/differential_gt/dgtn_original_demo.cpp.o
+.PHONY : src/differential_gt/dgtn_original_demo.cpp.o
+
+src/differential_gt/dgtn_original_demo.i: src/differential_gt/dgtn_original_demo.cpp.i
+
+.PHONY : src/differential_gt/dgtn_original_demo.i
+
+# target to preprocess a source file
+src/differential_gt/dgtn_original_demo.cpp.i:
+	$(MAKE) -f CMakeFiles/dgtn_original_demo.dir/build.make CMakeFiles/dgtn_original_demo.dir/src/differential_gt/dgtn_original_demo.cpp.i
+.PHONY : src/differential_gt/dgtn_original_demo.cpp.i
+
+src/differential_gt/dgtn_original_demo.s: src/differential_gt/dgtn_original_demo.cpp.s
+
+.PHONY : src/differential_gt/dgtn_original_demo.s
+
+# target to generate assembly for a file
+src/differential_gt/dgtn_original_demo.cpp.s:
+	$(MAKE) -f CMakeFiles/dgtn_original_demo.dir/build.make CMakeFiles/dgtn_original_demo.dir/src/differential_gt/dgtn_original_demo.cpp.s
+.PHONY : src/differential_gt/dgtn_original_demo.cpp.s
 
 src/differential_gt/ncgt.o: src/differential_gt/ncgt.cpp.o
 
@@ -768,13 +808,12 @@ help:
 	@echo "... install/strip"
 	@echo "... install"
 	@echo "... list_install_components"
+	@echo "... edit_cache"
 	@echo "... install/local"
 	@echo "... rosgraph_msgs_generate_messages_eus"
 	@echo "... std_msgs_generate_messages_eus"
-	@echo "... diff_game_theory_node"
 	@echo "... rebuild_cache"
 	@echo "... roscpp_generate_messages_eus"
-	@echo "... roscpp_generate_messages_cpp"
 	@echo "... roscpp_generate_messages_py"
 	@echo "... rosgraph_msgs_generate_messages_py"
 	@echo "... doxygen"
@@ -782,23 +821,25 @@ help:
 	@echo "... download_extra_data"
 	@echo "... run_tests"
 	@echo "... std_msgs_generate_messages_lisp"
+	@echo "... roscpp_generate_messages_cpp"
+	@echo "... dgtn_original_demo"
 	@echo "... roscpp_generate_messages_lisp"
 	@echo "... clean_test_results"
 	@echo "... tests"
+	@echo "... std_msgs_generate_messages_cpp"
 	@echo "... std_msgs_generate_messages_nodejs"
 	@echo "... std_msgs_generate_messages_py"
 	@echo "... roscpp_generate_messages_nodejs"
 	@echo "... cgt"
-	@echo "... std_msgs_generate_messages_cpp"
-	@echo "... diff_game_theory_node_6dof"
 	@echo "... ncgt"
-	@echo "... rosgraph_msgs_generate_messages_nodejs"
-	@echo "... dgt_node"
 	@echo "... ncgt_ros_node"
+	@echo "... dgtn_6dof_external_human_robot_refs"
 	@echo "... cgt_ros_node"
 	@echo "... rosgraph_msgs_generate_messages_cpp"
+	@echo "... dgtn"
 	@echo "... test"
-	@echo "... edit_cache"
+	@echo "... rosgraph_msgs_generate_messages_nodejs"
+	@echo "... dgtn_6dof"
 	@echo "... gmock_main"
 	@echo "... gmock"
 	@echo "... gtest_main"
@@ -809,15 +850,18 @@ help:
 	@echo "... src/differential_gt/cgt_ros_node.o"
 	@echo "... src/differential_gt/cgt_ros_node.i"
 	@echo "... src/differential_gt/cgt_ros_node.s"
-	@echo "... src/differential_gt/dgt_node.o"
-	@echo "... src/differential_gt/dgt_node.i"
-	@echo "... src/differential_gt/dgt_node.s"
-	@echo "... src/differential_gt/diff_game_theory_node.o"
-	@echo "... src/differential_gt/diff_game_theory_node.i"
-	@echo "... src/differential_gt/diff_game_theory_node.s"
-	@echo "... src/differential_gt/diff_game_theory_node_6dof.o"
-	@echo "... src/differential_gt/diff_game_theory_node_6dof.i"
-	@echo "... src/differential_gt/diff_game_theory_node_6dof.s"
+	@echo "... src/differential_gt/dgtn.o"
+	@echo "... src/differential_gt/dgtn.i"
+	@echo "... src/differential_gt/dgtn.s"
+	@echo "... src/differential_gt/dgtn_6dof.o"
+	@echo "... src/differential_gt/dgtn_6dof.i"
+	@echo "... src/differential_gt/dgtn_6dof.s"
+	@echo "... src/differential_gt/dgtn_6dof_external_human_robot_refs.o"
+	@echo "... src/differential_gt/dgtn_6dof_external_human_robot_refs.i"
+	@echo "... src/differential_gt/dgtn_6dof_external_human_robot_refs.s"
+	@echo "... src/differential_gt/dgtn_original_demo.o"
+	@echo "... src/differential_gt/dgtn_original_demo.i"
+	@echo "... src/differential_gt/dgtn_original_demo.s"
 	@echo "... src/differential_gt/ncgt.o"
 	@echo "... src/differential_gt/ncgt.i"
 	@echo "... src/differential_gt/ncgt.s"

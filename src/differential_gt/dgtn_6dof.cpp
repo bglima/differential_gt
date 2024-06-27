@@ -80,6 +80,9 @@ int main(int argc, char **argv)
      // This command gives the opportunity to read the publication of the alpha parameter in a topic as a subscriber.
      ros::AsyncSpinner spinner(4);
      spinner.start();
+
+     // Subscribing to a topic called '/alpha' so that we can have the alpha parameter coming from an external node. 
+     ros::Subscriber alpha_sub = n.subscribe("/alpha", 1000, alphaCallback);
      
      // In this case, the n_dofs variable is extended to 6. The parameters that are modified come from the 
      // gt_traj_arbitration package of Paolo Franceschi's repository (https://github.com/paolofrance/gt_traj_arbitration)
@@ -198,8 +201,6 @@ int main(int argc, char **argv)
      Eigen::MatrixXd Rh; Rh.resize(n_dofs,n_dofs); Rh << 0.0005*I; 
      Eigen::MatrixXd Rr; Rr.resize(n_dofs,n_dofs); Rr << 0.0005*I;
 
-     // Subscribing to a topic called '/alpha' so that we can have the alpha parameter coming from an external node. 
-     ros::Subscriber alpha_sub = n.subscribe("/alpha", 1000, alphaCallback);
      cgt.setAlpha(alpha);
 
      /* SET THE DIFF GAME THEORY PARAMETERS*/
