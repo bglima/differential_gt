@@ -112,10 +112,10 @@ void human_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
      ref_h.pose.position.x = msg->pose.position.x;
      ref_h.pose.position.y = msg->pose.position.y;
      ref_h.pose.position.z = msg->pose.position.z;
-     ref_h.pose.orientation.x = msg->pose.orientation.x;
-     ref_h.pose.orientation.y = msg->pose.orientation.y;
-     ref_h.pose.orientation.z = msg->pose.orientation.z;
-     ref_h.pose.orientation.w = msg->pose.orientation.w;
+     // ref_h.pose.orientation.x = msg->pose.orientation.x;
+     // ref_h.pose.orientation.y = msg->pose.orientation.y;
+     // ref_h.pose.orientation.z = msg->pose.orientation.z;
+     // ref_h.pose.orientation.w = msg->pose.orientation.w;
 }
 
 // Callback function used for receiving the robot reference externally.
@@ -124,10 +124,10 @@ void robot_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
      ref_r.pose.position.x = msg->pose.position.x;
      ref_r.pose.position.y = msg->pose.position.y;
      ref_r.pose.position.z = msg->pose.position.z;
-     ref_r.pose.orientation.x = msg->pose.orientation.x;
-     ref_r.pose.orientation.y = msg->pose.orientation.y;
-     ref_r.pose.orientation.z = msg->pose.orientation.z;
-     ref_r.pose.orientation.w = msg->pose.orientation.w;
+     // ref_r.pose.orientation.x = msg->pose.orientation.x;
+     // ref_r.pose.orientation.y = msg->pose.orientation.y;
+     // ref_r.pose.orientation.z = msg->pose.orientation.z;
+     // ref_r.pose.orientation.w = msg->pose.orientation.w;
 }
 
 
@@ -191,13 +191,13 @@ int main(int argc, char **argv)
      spinner.start();
 
      // Subscribing to a topic called '/alpha' so that we can have the alpha parameter coming from an external node. 
-     ros::Subscriber alpha_sub = n.subscribe("/alpha", 1000, alphaCallback);
+     ros::Subscriber alpha_sub = n.subscribe("/alpha", 1, alphaCallback);
      // Subscribing to a topic called '/human_ref' so that we can have the human reference coming from an external node.
-     ros::Subscriber human_ref_sub = n.subscribe("/human_ref", 1000, human_refCallback);
+     ros::Subscriber human_ref_sub = n.subscribe("/human_ref", 1, human_refCallback);
      // Subscribing to a topic called '/robot_ref' so that we can have the robot reference coming from an external node.
-     ros::Subscriber robot_ref_sub = n.subscribe("/robot_ref", 1000, robot_refCallback);
+     ros::Subscriber robot_ref_sub = n.subscribe("/robot_ref", 1, robot_refCallback);
      // Subscribing to a topic called '/franka_state_controller/franka_states' so that we can have the actual state of the robot.
-     ros::Subscriber current_robot_state_sub = n.subscribe("/franka_state_controller/franka_states", 1000, current_robot_stateCallback); 
+     ros::Subscriber current_robot_state_sub = n.subscribe("/franka_state_controller/franka_states", 1, current_robot_stateCallback); 
      
      while(!initial_robot_state_ok)
      {
@@ -413,7 +413,7 @@ int main(int argc, char **argv)
 
      // Instead of considering the /state/pose topic, we will consider the topic which the impedance controller is subscribed to
 
-     ros::Publisher commanded_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/cartesian_pose_controller/cartesian_reference_pose", 1);
+     ros::Publisher commanded_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/cartesian_impedance_example_controller/equilibrium_pose", 1);
      ros::Publisher commanded_velocity_pub = n.advertise<geometry_msgs::TwistStamped>("/state/velocity", 1);
 
      ros::Publisher human_reference_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/reference/human/pose", 1);

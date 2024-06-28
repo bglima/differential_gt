@@ -131,9 +131,9 @@ bool CoopGT::getCostMatrices(Eigen::MatrixXd& Q1,
 
 bool CoopGT::setAlpha(const double& alpha)
 {
-  if(alpha>1 || alpha <0)
+  if(alpha > 0.9 || alpha < 0.1)
   {
-    ROS_ERROR_STREAM("weight alpha must be 0 < alpha < 1 . Current value of alpha: "<<alpha);
+    ROS_ERROR_STREAM("weight alpha must be 0 < alpha < 1 . Current value of alpha: " << alpha);
   }
   alpha_ = alpha;
   alpha_set_ = true;

@@ -17,9 +17,9 @@ def talker():
         t_now = rospy.Time.now()
         time_interval = t_now - t
 
-        robot_reference.pose.position.x = 0.3172
-        robot_reference.pose.position.y = 1.6e-05
-        robot_reference.pose.position.z = 0.482591
+        robot_reference.pose.position.x = 0.5072
+        robot_reference.pose.position.y = 0.2
+        robot_reference.pose.position.z = 0.682591
         robot_reference.pose.orientation.x = 0.99998
         robot_reference.pose.orientation.y = 0.0062
         robot_reference.pose.orientation.z = -3e-05
