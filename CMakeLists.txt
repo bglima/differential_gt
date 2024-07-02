@@ -70,6 +70,7 @@ add_executable(cgt_ros_node src/differential_gt/cgt_ros_node.cpp)
 add_executable(dgtn src/differential_gt/dgtn.cpp)
 add_executable(dgtn_6dof src/differential_gt/dgtn_6dof.cpp)
 add_executable(dgtn_6dof_external_human_robot_refs src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp)
+add_executable(dgtn_3dof_external_human_robot_refs src/differential_gt/dgtn_3dof_external_human_robot_refs.cpp)
 
 target_link_libraries(dgtn_original_demo cgt ncgt ${catkin_LIBRARIES})
 target_link_libraries(ncgt_ros_node cgt ncgt ${catkin_LIBRARIES})
@@ -77,4 +78,4 @@ target_link_libraries(cgt_ros_node cgt ncgt ${catkin_LIBRARIES})
 target_link_libraries(dgtn cgt ncgt ${catkin_LIBRARIES})
 target_link_libraries(dgtn_6dof cgt ncgt ${catkin_LIBRARIES})
 target_link_libraries(dgtn_6dof_external_human_robot_refs cgt ncgt ${catkin_LIBRARIES})
-
+target_link_libraries(dgtn_3dof_external_human_robot_refs cgt ncgt ${catkin_LIBRARIES})

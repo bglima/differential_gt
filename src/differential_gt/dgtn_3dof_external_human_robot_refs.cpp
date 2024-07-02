@@ -17,8 +17,8 @@ double alpha = 0.1;
 geometry_msgs::PoseStamped ref_h;
 geometry_msgs::PoseStamped ref_r;
 
-// n_dofs definition.
-int n_dofs = 6;
+// n_dofs definition. In this case, our intention is to control the three translation components only, thus n_dofs = 3
+int n_dofs = 3;
 
 // Initialize the Current State
 Eigen::VectorXd Z = Eigen::VectorXd::Zero(2*n_dofs);
@@ -27,52 +27,13 @@ Eigen::VectorXd dZ = Eigen::VectorXd::Zero(2*n_dofs);
 // Indicates if the first initial robot pose is received.
 bool initial_robot_state_ok = false;
 
-// This function is used to convert the three rotation dofs (roll, pitch, yaw) into their corresponding quaternion form, based on the rotation sequence RPY.
-Eigen::VectorXd from_euler_to_quaternion(double R, double P, double Y)
-{
-     // Definition of a rotation matrix based on the values of the three rotations
-     Eigen::Matrix3d m;
-
-     m = Eigen::AngleAxisd(R, Eigen::Vector3d::UnitX())
-       * Eigen::AngleAxisd(P, Eigen::Vector3d::UnitY())
-       * Eigen::AngleAxisd(Y, Eigen::Vector3d::UnitZ());
-
-     // Definition of the quaternion matrix based on the previous matrix definition
-     Eigen::Quaterniond rot_mat_in_quaternion(m);
-
-     // Defining the vector that stores the quaternion values
-     Eigen::Vector4d quaternion_values; 
-     quaternion_values << rot_mat_in_quaternion.x(),
-                          rot_mat_in_quaternion.y(),
-                          rot_mat_in_quaternion.z(),
-                          rot_mat_in_quaternion.w();
-
-     return quaternion_values;
-}
-
-// This function is used to convert the quaternion values into their corresponding euler angles form, based on the rotation sequence RPY (roll, pitch, yaw).
-Eigen::VectorXd from_quaternion_to_euler(double x, double y, double z, double w)
-{
-     // Defining a Eigen::Quaterniond in order to store the quaternion values
-     Eigen::Quaterniond rot_mat_in_quaternion;
-     rot_mat_in_quaternion.x() = x;
-     rot_mat_in_quaternion.y() = y;
-     rot_mat_in_quaternion.z() = z;
-     rot_mat_in_quaternion.w() = w;
-
-     // Defining the vector that stores the euler angles
-     Eigen::Vector3d euler_angles = rot_mat_in_quaternion.toRotationMatrix().eulerAngles(0,1,2);
-
-     return euler_angles;
-}
-
-// Callback function used for receiving the alpha parameter externally.
+// Callback function used for receiving the alpha parameter from another node.
 void alphaCallback(const std_msgs::Float32::ConstPtr& msg)
 {
      alpha = msg->data;
 }
 
-// Callback function used for receiving the human reference externally.
+// Callback function used for receiving the human reference from another node.
 void human_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
      ref_h.pose.position.x = msg->pose.position.x;
@@ -84,7 +45,7 @@ void human_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
      ref_h.pose.orientation.w = msg->pose.orientation.w;
 }
 
-// Callback function used for receiving the robot reference externally.
+// Callback function used for receiving the robot reference from another node.
 void robot_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
      ref_r.pose.position.x = msg->pose.position.x;
@@ -118,11 +79,7 @@ void current_robot_stateCallback(const franka_msgs::FrankaStateConstPtr& msg)
      Z(1) = msg->O_T_EE[13];
      Z(2) = msg->O_T_EE[14];
 
-     Z(3) = euler_angles_RPY(0);
-     Z(4) = euler_angles_RPY(1);
-     Z(5) = euler_angles_RPY(2);
-
-     // Fill initial references with the current robot state
+     // Fill initial references with the current robot state. The orientation is the one provided by franka_state.
      // Human reference
      ref_h.pose.position.x = Z(0);
      ref_h.pose.position.y = Z(1);
@@ -162,8 +119,7 @@ int main(int argc, char **argv)
      ros::AsyncSpinner spinner(5);
      spinner.start();
 
-// WE HAVE TO CHANGE THE SUBSCRIBER BUFFER IN ORDER TO WORK IN A PROPER WAY
-
+     // WE HAVE TO CHANGE THE SUBSCRIBER BUFFER IN ORDER TO WORK IN A PROPER WAY
 
      // Subscribing to a topic called '/alpha' so that we can have the alpha parameter coming from an external node. 
      ros::Subscriber alpha_sub = n.subscribe("/alpha", 30, alphaCallback);
@@ -187,15 +143,6 @@ int main(int argc, char **argv)
      // Defining the Identity and Null Matrices
      Eigen::MatrixXd O; O.resize(n_dofs, n_dofs); O.setZero();
      Eigen::MatrixXd I; I.resize(n_dofs, n_dofs); I.setIdentity();
-
-     // Converting the quaternion values of human and robot references in euler angles.
-     Eigen::Vector3d human_euler_angles = from_quaternion_to_euler(ref_h.pose.orientation.x, ref_h.pose.orientation.y, ref_h.pose.orientation.z, ref_h.pose.orientation.w);
-     Eigen::Vector3d robot_euler_angles = from_quaternion_to_euler(ref_r.pose.orientation.x, ref_r.pose.orientation.y, ref_r.pose.orientation.z, ref_r.pose.orientation.w);
-     
-     std::cout << "human_euler_angles: \n" << human_euler_angles << "\n";
-     std::cout << "robot_euler_angles: \n" << robot_euler_angles << "\n";
-
-     return 0;
 
      // Here the system matrices are defined
      Eigen::MatrixXd Ac; Ac.resize(2*n_dofs,2*n_dofs);
@@ -249,7 +196,6 @@ int main(int argc, char **argv)
      // I also checked another paper of Paolo Franceschi at this link: https://arxiv.org/pdf/2307.10739
      Qhh << I, O,
             O, 0.0001*I;
-     
 
      // Human state-error-weight cost component based on robot references.
      // I also checked another paper of Paolo Franceschi at this link: https://arxiv.org/pdf/2307.10739
@@ -316,12 +262,12 @@ int main(int argc, char **argv)
      /* IN HERE, WE DEFINE A FIRST POSITIONAL REFERENCE TO OUR CONTROLLER */
 
      Eigen::VectorXd rh; rh.resize(n_dofs);
-     rh << ref_h.pose.position.x, ref_h.pose.position.y, ref_h.pose.position.z, human_euler_angles[0], human_euler_angles[1], human_euler_angles[2];
+     rh << ref_h.pose.position.x, ref_h.pose.position.y, ref_h.pose.position.z;
      Eigen::VectorXd rr; rr.resize(n_dofs);
-     rr << ref_r.pose.position.x, ref_r.pose.position.y, ref_r.pose.position.z, robot_euler_angles[0], robot_euler_angles[1], robot_euler_angles[2];
+     rr << ref_r.pose.position.x, ref_r.pose.position.y, ref_r.pose.position.z;
 
-     // std::cout << "Eigen::VectorXd rh: \n" << rh << "\n";
-     // std::cout << "Eigen::VectorXd rr: \n" << rr << "\n";
+     std::cout << "Eigen::VectorXd rh: \n" << rh << "\n";
+     std::cout << "Eigen::VectorXd rr: \n" << rr << "\n";
 
      // setPosReference for the Cooperative case
      cgt.setPosReference(rh,rr);  
@@ -397,8 +343,7 @@ int main(int argc, char **argv)
      ncgt.computeControlInputs();
      ncgt.getControlInput(non_coop_control);
 
-     // Indexes initialization
-     int reference_index = 0;
+     // Index initialization
      long double current_time = 0;
 
      ROS_INFO_STREAM("The controller is initialized. The demo starts now.");
@@ -406,16 +351,8 @@ int main(int argc, char **argv)
      // Main loop
      while (ros::ok())
      {
-          Eigen::VectorXd human_euler_angles; human_euler_angles.resize(3);
-          human_euler_angles = from_quaternion_to_euler(ref_h.pose.orientation.x, ref_h.pose.orientation.y, ref_h.pose.orientation.z, ref_h.pose.orientation.w);
-          Eigen::VectorXd robot_euler_angles; robot_euler_angles.resize(3);
-          robot_euler_angles = from_quaternion_to_euler(ref_r.pose.orientation.x, ref_r.pose.orientation.y, ref_r.pose.orientation.z, ref_r.pose.orientation.w);
-     
-          // std::cout << "human_euler_angles: \n" << human_euler_angles << "\n";
-          // std::cout << "robot_euler_angles: \n" << robot_euler_angles << "\n";
-
-          rh << ref_h.pose.position.x, ref_h.pose.position.y, ref_h.pose.position.z, human_euler_angles[0], human_euler_angles[1], human_euler_angles[2];
-          rr << ref_r.pose.position.x, ref_r.pose.position.y, ref_r.pose.position.z, robot_euler_angles[0], robot_euler_angles[1], robot_euler_angles[2];
+          rh << ref_h.pose.position.x, ref_h.pose.position.y, ref_h.pose.position.z;
+          rr << ref_r.pose.position.x, ref_r.pose.position.y, ref_r.pose.position.z;
           
           // All these functions are placed here in order to re-compute the values of the gain matrices and the corresponding control inputs
           // Depeding on the value of the alpha parameter that is passed through a topic.
@@ -461,19 +398,19 @@ int main(int argc, char **argv)
           weighted_reference = cgt.getReference();
           ncgt.getReference(rh,rr);
 
-          ROS_INFO_STREAM("Coop control input: " << coop_control.transpose());
-          ROS_INFO_STREAM("Non-coop Control input: " << non_coop_control.transpose());
-          ROS_INFO_STREAM("weighted_reference: " << weighted_reference.transpose());
-          ROS_INFO_STREAM("human reference: " << rh.transpose());
-          ROS_INFO_STREAM("robot reference: " << rr.transpose());
+          // ROS_INFO_STREAM("Coop control input: " << coop_control.transpose());
+          // ROS_INFO_STREAM("Non-coop Control input: " << non_coop_control.transpose());
+          // ROS_INFO_STREAM("weighted_reference: " << weighted_reference.transpose());
+          // ROS_INFO_STREAM("human reference: " << rh.transpose());
+          // ROS_INFO_STREAM("robot reference: " << rr.transpose());
 
           // Note that we print the state stored before the step has been done.
           // In other words, we print the previous state. 
-          ROS_INFO_STREAM("cgt_state: " << cgt_state.transpose());
-          ROS_INFO_STREAM("ncgt_state: " << ncgt_state.transpose());
+          // ROS_INFO_STREAM("cgt_state: " << cgt_state.transpose());
+          // ROS_INFO_STREAM("ncgt_state: " << ncgt_state.transpose());
 
           // Update time
-          seconds_from_start = ros::Time(current_time); // time[reference_index];
+          seconds_from_start = ros::Time(current_time);
 
           // Update time from message headers
           commanded_pose_msg.header.stamp = seconds_from_start;
@@ -502,12 +439,10 @@ int main(int argc, char **argv)
           human_reference_pose_msg.pose.position.z = rh(2);
 
           // Human reference orientations
-          Eigen::Vector4d human_reference_orientation_quaternion;
-          human_reference_orientation_quaternion = from_euler_to_quaternion(rh(3), rh(4), rh(5));
-          human_reference_pose_msg.pose.orientation.x = human_reference_orientation_quaternion[0];
-          human_reference_pose_msg.pose.orientation.y = human_reference_orientation_quaternion[1];
-          human_reference_pose_msg.pose.orientation.z = human_reference_orientation_quaternion[2];
-          human_reference_pose_msg.pose.orientation.w = human_reference_orientation_quaternion[3];
+          human_reference_pose_msg.pose.orientation.x = ref_h.pose.orientation.x;
+          human_reference_pose_msg.pose.orientation.y = ref_h.pose.orientation.y;
+          human_reference_pose_msg.pose.orientation.z = ref_h.pose.orientation.z;
+          human_reference_pose_msg.pose.orientation.w = ref_h.pose.orientation.w;
 
           // Robot reference positions
           robot_reference_pose_msg.pose.position.x = rr(0);
@@ -515,12 +450,10 @@ int main(int argc, char **argv)
           robot_reference_pose_msg.pose.position.z = rr(2);
 
           // Robot reference orientations
-          Eigen::Vector4d robot_reference_orientation_quaternion;
-          robot_reference_orientation_quaternion = from_euler_to_quaternion(rr(3), rr(4), rr(5));
-          robot_reference_pose_msg.pose.orientation.x = robot_reference_orientation_quaternion[0];
-          robot_reference_pose_msg.pose.orientation.y = robot_reference_orientation_quaternion[1];
-          robot_reference_pose_msg.pose.orientation.z = robot_reference_orientation_quaternion[2];
-          robot_reference_pose_msg.pose.orientation.w = robot_reference_orientation_quaternion[3];
+          robot_reference_pose_msg.pose.orientation.x = ref_r.pose.orientation.x;
+          robot_reference_pose_msg.pose.orientation.y = ref_r.pose.orientation.y;
+          robot_reference_pose_msg.pose.orientation.z = ref_r.pose.orientation.z;
+          robot_reference_pose_msg.pose.orientation.w = ref_r.pose.orientation.w;
 
           // Weighted reference positions
           weighted_reference_pose_msg.pose.position.x = weighted_reference(0);
@@ -528,91 +461,89 @@ int main(int argc, char **argv)
           weighted_reference_pose_msg.pose.position.z = weighted_reference(2);
 
           // Weighted reference orientations
-          Eigen::Vector4d weighted_reference_orientation_quaternion;
-          weighted_reference_orientation_quaternion = from_euler_to_quaternion(weighted_reference(3), weighted_reference(4), weighted_reference(5));
-          weighted_reference_pose_msg.pose.orientation.x = weighted_reference_orientation_quaternion[0];
-          weighted_reference_pose_msg.pose.orientation.y = weighted_reference_orientation_quaternion[1];
-          weighted_reference_pose_msg.pose.orientation.z = weighted_reference_orientation_quaternion[2];
-          weighted_reference_pose_msg.pose.orientation.w = weighted_reference_orientation_quaternion[3];
+          weighted_reference_pose_msg.pose.orientation.x = ref_h.pose.orientation.x;
+          weighted_reference_pose_msg.pose.orientation.y = ref_h.pose.orientation.y;
+          weighted_reference_pose_msg.pose.orientation.z = ref_h.pose.orientation.z;
+          weighted_reference_pose_msg.pose.orientation.w = ref_h.pose.orientation.w;
 
 
           // Update state pose message.
           if (alpha >= 0.5)
           {
+               // commanded positions
                commanded_pose_msg.pose.position.x = cgt_state(0);
                commanded_pose_msg.pose.position.y = cgt_state(1);
                commanded_pose_msg.pose.position.z = cgt_state(2);
-               Eigen::Vector4d commanded_pose_orientation_quaternion;
-               commanded_pose_orientation_quaternion = from_euler_to_quaternion(cgt_state(3), cgt_state(4), cgt_state(5));
-               commanded_pose_msg.pose.orientation.x = commanded_pose_orientation_quaternion[0];
-               commanded_pose_msg.pose.orientation.y = commanded_pose_orientation_quaternion[1];
-               commanded_pose_msg.pose.orientation.z = commanded_pose_orientation_quaternion[2];
-               commanded_pose_msg.pose.orientation.w = commanded_pose_orientation_quaternion[3];
+               // commanded orientations set equal to ref_h 
+               commanded_pose_msg.pose.orientation.x = ref_h.pose.orientation.x;
+               commanded_pose_msg.pose.orientation.y = ref_h.pose.orientation.y;
+               commanded_pose_msg.pose.orientation.z = ref_h.pose.orientation.z;
+               commanded_pose_msg.pose.orientation.w = ref_h.pose.orientation.w;
           }
 
           else if (alpha < 0.5)
           {
+               // commanded positions
                commanded_pose_msg.pose.position.x = ncgt_state(0);
                commanded_pose_msg.pose.position.y = ncgt_state(1);
                commanded_pose_msg.pose.position.z = ncgt_state(2);
-               Eigen::Vector4d commanded_pose_orientation_quaternion;
-               commanded_pose_orientation_quaternion = from_euler_to_quaternion(ncgt_state(3), ncgt_state(4), ncgt_state(5));
-               commanded_pose_msg.pose.orientation.x = commanded_pose_orientation_quaternion[0];
-               commanded_pose_msg.pose.orientation.y = commanded_pose_orientation_quaternion[1];
-               commanded_pose_msg.pose.orientation.z = commanded_pose_orientation_quaternion[2];
-               commanded_pose_msg.pose.orientation.w = commanded_pose_orientation_quaternion[3];
+               // commanded orientations set equal to ref_r
+               commanded_pose_msg.pose.orientation.x = ref_r.pose.orientation.x;
+               commanded_pose_msg.pose.orientation.y = ref_r.pose.orientation.y;
+               commanded_pose_msg.pose.orientation.z = ref_r.pose.orientation.z;
+               commanded_pose_msg.pose.orientation.w = ref_r.pose.orientation.w;
           }
 
           // Update state velocity message.
-          // Since it is a unidimensional problem, we will use only the Y positional axis. All the rest, leave as zero.
           if (alpha >= 0.5)
           {
-               commanded_velocity_msg.twist.linear.x = cgt_state(6);
-               commanded_velocity_msg.twist.linear.y = cgt_state(7);
-               commanded_velocity_msg.twist.linear.y = cgt_state(8);
-               commanded_velocity_msg.twist.angular.x = cgt_state(9);
-               commanded_velocity_msg.twist.angular.y = cgt_state(10);
-               commanded_velocity_msg.twist.angular.z = cgt_state(11);
+               commanded_velocity_msg.twist.linear.x = cgt_state(3);
+               commanded_velocity_msg.twist.linear.y = cgt_state(4);
+               commanded_velocity_msg.twist.linear.y = cgt_state(5);
+               // we don't want any angular velocity of the end-effector since it has to be fixed in position.
+               commanded_velocity_msg.twist.angular.x = 0;
+               commanded_velocity_msg.twist.angular.y = 0;
+               commanded_velocity_msg.twist.angular.z = 0;
           }
-
           else if (alpha < 0.5)
           {
                commanded_velocity_msg.twist.linear.x = ncgt_state(6);
                commanded_velocity_msg.twist.linear.y = ncgt_state(7);
                commanded_velocity_msg.twist.linear.y = ncgt_state(8);
-               commanded_velocity_msg.twist.angular.x = ncgt_state(9);
-               commanded_velocity_msg.twist.angular.y = ncgt_state(10);
-               commanded_velocity_msg.twist.angular.z = ncgt_state(11);
+               // we don't want any angular velocity of the end-effector since it has to be fixed in position.
+               commanded_velocity_msg.twist.angular.x = 0;
+               commanded_velocity_msg.twist.angular.y = 0;
+               commanded_velocity_msg.twist.angular.z = 0;
           }
 
           // Update the control messages.
           optimal_control_human_msg.wrench.force.x = non_coop_control(0);
           optimal_control_human_msg.wrench.force.y = non_coop_control(1);
           optimal_control_human_msg.wrench.force.z = non_coop_control(2);
-          optimal_control_human_msg.wrench.torque.x = non_coop_control(3);
-          optimal_control_human_msg.wrench.torque.y = non_coop_control(4);
-          optimal_control_human_msg.wrench.torque.z = non_coop_control(5);
+          optimal_control_human_msg.wrench.torque.x = 0;
+          optimal_control_human_msg.wrench.torque.y = 0;
+          optimal_control_human_msg.wrench.torque.z = 0;
 
-          optimal_control_robot_msg.wrench.force.x = non_coop_control(6);
-          optimal_control_robot_msg.wrench.force.y = non_coop_control(7);
-          optimal_control_robot_msg.wrench.force.z = non_coop_control(8);
-          optimal_control_robot_msg.wrench.torque.x = non_coop_control(9);
-          optimal_control_robot_msg.wrench.torque.y = non_coop_control(10);
-          optimal_control_robot_msg.wrench.torque.z = non_coop_control(11);
+          optimal_control_robot_msg.wrench.force.x = non_coop_control(3);
+          optimal_control_robot_msg.wrench.force.y = non_coop_control(4);
+          optimal_control_robot_msg.wrench.force.z = non_coop_control(5);
+          optimal_control_robot_msg.wrench.torque.x = 0;
+          optimal_control_robot_msg.wrench.torque.y = 0;
+          optimal_control_robot_msg.wrench.torque.z = 0;
 
           optimal_control_human_weighted_msg.wrench.force.x = coop_control(0);
           optimal_control_human_weighted_msg.wrench.force.y = coop_control(1);
           optimal_control_human_weighted_msg.wrench.force.z = coop_control(2);
-          optimal_control_human_weighted_msg.wrench.torque.x = coop_control(3);
-          optimal_control_human_weighted_msg.wrench.torque.y = coop_control(4);
-          optimal_control_human_weighted_msg.wrench.torque.z = coop_control(5);
+          optimal_control_human_weighted_msg.wrench.torque.x = 0;
+          optimal_control_human_weighted_msg.wrench.torque.y = 0;
+          optimal_control_human_weighted_msg.wrench.torque.z = 0;
 
-          optimal_control_robot_weighted_msg.wrench.force.x = coop_control(6);
-          optimal_control_robot_weighted_msg.wrench.force.y = coop_control(7);
-          optimal_control_robot_weighted_msg.wrench.force.z = coop_control(8);
-          optimal_control_robot_weighted_msg.wrench.torque.x = coop_control(9);
-          optimal_control_robot_weighted_msg.wrench.torque.y = coop_control(10);
-          optimal_control_robot_weighted_msg.wrench.torque.z = coop_control(11);
+          optimal_control_robot_weighted_msg.wrench.force.x = coop_control(3);
+          optimal_control_robot_weighted_msg.wrench.force.y = coop_control(4);
+          optimal_control_robot_weighted_msg.wrench.force.z = coop_control(5);
+          optimal_control_robot_weighted_msg.wrench.torque.x = 0;
+          optimal_control_robot_weighted_msg.wrench.torque.y = 0;
+          optimal_control_robot_weighted_msg.wrench.torque.z = 0;
 
           // Publish messages
           commanded_pose_pub.publish(commanded_pose_msg);

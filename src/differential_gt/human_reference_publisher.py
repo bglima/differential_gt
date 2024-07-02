@@ -8,10 +8,10 @@ import geometry_msgs.msg
 def talker():
     pub = rospy.Publisher('/human_ref', geometry_msgs.msg.PoseStamped, queue_size=10)
     rospy.init_node('human_ref_publisher', anonymous=True)
-    rate = rospy.Rate(1/10) 
+    rate = rospy.Rate(1) 
     human_reference = geometry_msgs.msg.PoseStamped()
     t = rospy.get_rostime()
-    d = rospy.Duration.from_sec(10)
+    d = rospy.Duration.from_sec(1)
 
     while not rospy.is_shutdown():
         t_now = rospy.Time.now()
@@ -20,15 +20,17 @@ def talker():
         human_reference.pose.position.x = 0.3072
         human_reference.pose.position.y = 1.6e-05
         human_reference.pose.position.z = 0.482591
-        human_reference.pose.orientation.x = 0.99998
-        human_reference.pose.orientation.y = 0.0062
-        human_reference.pose.orientation.z = -3e-05
-        human_reference.pose.orientation.w = -0.00155
+        human_reference.pose.orientation.x = 0.999998
+        human_reference.pose.orientation.y = 0.000117441
+        human_reference.pose.orientation.z = 0.00039217
+        human_reference.pose.orientation.w = -3.94717e-05
         print("-------")
         rospy.loginfo(time_interval.to_sec())
         rospy.loginfo(human_reference)
         pub.publish(human_reference)
         rate.sleep()
+
+-3.94717e-05
 
 if __name__ == '__main__':
     try:

@@ -7,11 +7,11 @@ import std_msgs.msg
 def talker():
     pub = rospy.Publisher('/alpha', std_msgs.msg.Float32, queue_size=10)
     rospy.init_node('alpha_publisher', anonymous=True)
-    rate = rospy.Rate(1/5) 
+    rate = rospy.Rate(1/8) 
     alpha = std_msgs.msg.Float32()
     alpha.data = 0
     t = rospy.get_rostime()
-    d = rospy.Duration.from_sec(5)
+    d = rospy.Duration.from_sec(8)
     while not rospy.is_shutdown():
         t_now = rospy.Time.now()
         time_interval = t_now - t
