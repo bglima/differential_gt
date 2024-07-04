@@ -39,10 +39,10 @@ void human_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
      ref_h.pose.position.x = msg->pose.position.x;
      ref_h.pose.position.y = msg->pose.position.y;
      ref_h.pose.position.z = msg->pose.position.z;
-     ref_h.pose.orientation.x = msg->pose.orientation.x;
-     ref_h.pose.orientation.y = msg->pose.orientation.y;
-     ref_h.pose.orientation.z = msg->pose.orientation.z;
-     ref_h.pose.orientation.w = msg->pose.orientation.w;
+     // ref_h.pose.orientation.x = msg->pose.orientation.x;
+     // ref_h.pose.orientation.y = msg->pose.orientation.y;
+     // ref_h.pose.orientation.z = msg->pose.orientation.z;
+     // ref_h.pose.orientation.w = msg->pose.orientation.w;
 }
 
 // Callback function used for receiving the robot reference from another node.
@@ -51,10 +51,10 @@ void robot_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
      ref_r.pose.position.x = msg->pose.position.x;
      ref_r.pose.position.y = msg->pose.position.y;
      ref_r.pose.position.z = msg->pose.position.z;
-     ref_r.pose.orientation.x = msg->pose.orientation.x;
-     ref_r.pose.orientation.y = msg->pose.orientation.y;
-     ref_r.pose.orientation.z = msg->pose.orientation.z;
-     ref_r.pose.orientation.w = msg->pose.orientation.w;
+     // ref_r.pose.orientation.x = msg->pose.orientation.x;
+     // ref_r.pose.orientation.y = msg->pose.orientation.y;
+     // ref_r.pose.orientation.z = msg->pose.orientation.z;
+     // ref_r.pose.orientation.w = msg->pose.orientation.w;
 }
 
 // Callback function used for receiving the initial state of the robot.
