@@ -5,6 +5,6 @@
 
   <!-- Plot controller's state -->
   <node name="diff_game_theory_controller_state" pkg="rqt_multiplot" type="rqt_multiplot" respawn="false" 
-    args="--multiplot-config $(find differential_gt)/config/diff_game_theory_controller_state_6dof_x_case_multiplot.xml --multiplot-run-all " />
+    args="--multiplot-config $(find differential_gt)/config/reference_state_and_control_inputs.xml --multiplot-run-all " />
 
 </launch>

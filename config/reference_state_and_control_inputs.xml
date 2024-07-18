@@ -225,7 +225,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>(-) X_ref_coop_gt</title>
+                            <title>(-) X_ref_weighted</title>
                         </curve_3>
                     </curves>
                     <legend>
@@ -681,7 +681,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>(-) Y_ref_coop_gt</title>
+                            <title>(-) Y_ref_weighted</title>
                         </curve_3>
                     </curves>
                     <legend>
@@ -1137,7 +1137,7 @@
                                 <type>0</type>
                             </style>
                             <subscriber_queue_size>100</subscriber_queue_size>
-                            <title>(-) Z_ref_coop_gt</title>
+                            <title>(-) Z_ref_weighted</title>
                         </curve_3>
                     </curves>
                     <legend>

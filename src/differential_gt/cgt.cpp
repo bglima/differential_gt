@@ -111,17 +111,6 @@ bool CoopGT::getCostMatrices(Eigen::MatrixXd& Q1,
   R1 = R1_;
   R2 = R2_;
 
-  // // Print the Cooperative cost matrices.
-  // std::cout<< "COST PARAMETERS COOPERATIVE CASE: \n";
-  
-  // ROS_INFO_STREAM("Q11: \n" << Q11_ << "\n");
-  // ROS_INFO_STREAM("Q12: \n" << Q12_ << "\n");
-  // ROS_INFO_STREAM("Q21: \n" << Q21_ << "\n");
-  // ROS_INFO_STREAM("Q22: \n" << Q22_ << "\n");
-  // ROS_INFO_STREAM("Q1: \n" << Q1 << "\n");
-  // ROS_INFO_STREAM("Q2: \n" << Q2 << "\n");
-  // ROS_INFO_STREAM("R1: \n" << R1 << "\n");
-  // ROS_INFO_STREAM("R2: \n" << R2 << "\n");
   // ROS_INFO_STREAM("QGT: \n" << Q_gt_ << "\n");
   // ROS_INFO_STREAM("RGT: \n" << R_gt_ << "\n");
   
@@ -131,10 +120,10 @@ bool CoopGT::getCostMatrices(Eigen::MatrixXd& Q1,
 
 bool CoopGT::setAlpha(const double& alpha)
 {
-  if(alpha > 0.9 || alpha < 0.1)
-  {
-    ROS_ERROR_STREAM("weight alpha must be 0 < alpha < 1 . Current value of alpha: " << alpha);
-  }
+  // if(alpha > 0.9 || alpha < 0.1)
+  // {
+  //   ROS_ERROR_STREAM("weight alpha must be 0 < alpha < 1 . Current value of alpha: " << alpha);
+  // }
   alpha_ = alpha;
   alpha_set_ = true;
   return true;
@@ -284,7 +273,14 @@ Eigen::MatrixXd CoopGT::solveRiccati(const Eigen::MatrixXd &A,
   Eigen::MatrixXd Ham = Eigen::MatrixXd::Zero(2 * dim_x, 2 * dim_x);
   Ham << A, -B * R.inverse() * B.transpose(), -Q, -A.transpose();
 
+  // ROS_INFO_STREAM("Ham: \n" << Ham << "\n");
+
   Eigen::EigenSolver<Eigen::MatrixXd> Eigs(Ham);
+
+  // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues() << "\n");
+  // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues()[0].real() << "\n");
+  // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues()[0].imag() << "\n");
+  // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");
 
   Eigen::MatrixXcd eigvec = Eigen::MatrixXcd::Zero(2 * dim_x, dim_x);
   int j = 0;
@@ -297,10 +293,18 @@ Eigen::MatrixXd CoopGT::solveRiccati(const Eigen::MatrixXd &A,
     }
   }
 
+  // ROS_INFO_STREAM("Eigvec: \n" << eigvec << "\n");
+
   Eigen::MatrixXcd Vs_1, Vs_2;
   Vs_1 = eigvec.block(0, 0, dim_x, dim_x);
   Vs_2 = eigvec.block(dim_x, 0, dim_x, dim_x);
+
+  // ROS_INFO_STREAM("Vs_1: \n" << Vs_1 << "\n");
+  // ROS_INFO_STREAM("Vs_2: \n" << Vs_2 << "\n");
+
   P = (Vs_2 * Vs_1.inverse()).real();
+
+  // ROS_INFO_STREAM("P: \n" << P << "\n");
   
   return R.inverse()*B.transpose()*P;
 }

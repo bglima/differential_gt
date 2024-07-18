@@ -11,13 +11,17 @@
 #include <eigen_conversions/eigen_msg.h>
 
 // First definition of the alpha value so that a first computation can be done.
-double alpha = 0.1;
+double alpha = 0.01;
 
 // Definition of the human and robot references that will be assigned through the subscription.
 geometry_msgs::PoseStamped ref_h;
 geometry_msgs::PoseStamped ref_r;
 
-// n_dofs definition. In this case, our intention is to control the three translation components only, thus n_dofs = 3
+/* n_dofs definition. In this case, assuming that the orientation of the panda gripper is always in the same condition, 
+it is not relevant to control the three rotational components (roll, pitch, yaw). Thus, our intention is to control the 
+three translational components only. Hence, n_dofs = 3. 
+We read the three rotational components (in quaternion form) from the current pose of the robot end-effector in the 
+callback function defined below. */
 int n_dofs = 3;
 
 // Initialize the Current State
@@ -36,25 +40,21 @@ void alphaCallback(const std_msgs::Float32::ConstPtr& msg)
 // Callback function used for receiving the human reference from another node.
 void human_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
+     // In this case, the rotational components are not updated because of the above consideration
      ref_h.pose.position.x = msg->pose.position.x;
      ref_h.pose.position.y = msg->pose.position.y;
      ref_h.pose.position.z = msg->pose.position.z;
-     // ref_h.pose.orientation.x = msg->pose.orientation.x;
-     // ref_h.pose.orientation.y = msg->pose.orientation.y;
-     // ref_h.pose.orientation.z = msg->pose.orientation.z;
-     // ref_h.pose.orientation.w = msg->pose.orientation.w;
+
 }
 
 // Callback function used for receiving the robot reference from another node.
 void robot_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
+     // In this case, the rotational components are not updated because of the above consideration
      ref_r.pose.position.x = msg->pose.position.x;
      ref_r.pose.position.y = msg->pose.position.y;
      ref_r.pose.position.z = msg->pose.position.z;
-     // ref_r.pose.orientation.x = msg->pose.orientation.x;
-     // ref_r.pose.orientation.y = msg->pose.orientation.y;
-     // ref_r.pose.orientation.z = msg->pose.orientation.z;
-     // ref_r.pose.orientation.w = msg->pose.orientation.w;
+
 }
 
 // Callback function used for receiving the initial state of the robot.
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
      // Inizialization of system matrices
      M << 10*I;
      K << O;
-     D << 100*I;
+     D << 25*I; // The previous parameter was 100*I
 
      // Initialize the linearized state space matrices
      Ac << O, I,
@@ -180,13 +180,15 @@ int main(int argc, char **argv)
  
      /* COST PARAMETERS */
      
-     // Initialize the Cooperative GT controller state-error-weight cost matrices. They are also used in the Non-cooperative GT controller as it is written in the Franceschi's paper.
+     // Initialize the Cooperative GT controller state-error-weight cost matrices. 
+     // They are also used in the Non-cooperative GT controller as it is written in Franceschi's paper.
      Eigen::MatrixXd Qhh; Qhh.resize(2*n_dofs,2*n_dofs); 
      Eigen::MatrixXd Qhr; Qhr.resize(2*n_dofs,2*n_dofs); 
      Eigen::MatrixXd Qrr; Qrr.resize(2*n_dofs,2*n_dofs); 
      Eigen::MatrixXd Qrh; Qrh.resize(2*n_dofs,2*n_dofs); 
 
-     // Initialize the Cooperative GT controlcurrent_robot_stateCallbackler weighted state-error-weight cost matrices. They are also used in the Non-cooperative GT controller as it is written in the Franceschi's paper.
+     // Initialize the Cooperative GT controller weighted state-error-weight cost matrices. 
+     // They are also used in the Non-cooperative GT controller as it is written in Franceschi's paper.
      Eigen::MatrixXd Qh; Qh.resize(2*n_dofs,2*n_dofs);
      Eigen::MatrixXd Qr; Qr.resize(2*n_dofs,2*n_dofs);
      
@@ -224,11 +226,31 @@ int main(int argc, char **argv)
      // Get Cost Matrices Qh, Qr, Rh, Rr. These are the matrices that will be passed in the Non-cooperative case for the reasoning commented above.
      cgt.getCostMatrices(Qh,Qr,Rh,Rr);
 
+     // // Print the Cooperative cost matrices.
+     // std::cout<< "COST PARAMETERS COOPERATIVE CASE: \n";
+     
+     // ROS_INFO_STREAM("Qhh: \n" << Qhh << "\n");
+     // ROS_INFO_STREAM("Qhr: \n" << Qhr << "\n");
+     // ROS_INFO_STREAM("Qrh: \n" << Qrh << "\n");
+     // ROS_INFO_STREAM("Qrr: \n" << Qrr << "\n");
+     // ROS_INFO_STREAM("Qh: \n" << Qh << "\n");
+     // ROS_INFO_STREAM("Qr: \n" << Qr << "\n");
+     // ROS_INFO_STREAM("Rh: \n" << Rh << "\n");
+     // ROS_INFO_STREAM("Rr: \n" << Rr << "\n");
+
      // Set the Non-cooperative cost parameters, based on the ones got from the previous line.
      ncgt.setCostsParams(Qh,Qr,Rh,Rr);
 
      // Get the Non-cooperative matrices.
      ncgt.getCostMatrices(Qh,Qr,Rh,Rr);
+
+     // // Print the Non-cooperative cost matrices.
+     // std::cout<< "COST PARAMETERS NON-COOPERATIVE CASE: \n";
+     
+     // ROS_INFO_STREAM("Qh: \n" << Qh << "\n");
+     // ROS_INFO_STREAM("Qr: \n" << Qr << "\n");
+     // ROS_INFO_STREAM("Rh: \n" << Rh << "\n");
+     // ROS_INFO_STREAM("Rr: \n" << Rr << "\n");
 
      /* CURRENT STATE*/
 
@@ -257,7 +279,11 @@ int main(int argc, char **argv)
 
      // Get the Non-Cooperative gains
      Eigen::MatrixXd Kh,Kr;
-     ncgt.getNonCooperativeGains(Kh,Kr); 
+     ncgt.getNonCooperativeGains(Kh,Kr);
+
+     // ROS_INFO_STREAM("Kgt: \n" << Kgt << "\n");
+     // ROS_INFO_STREAM("Kh: \n" << Kh << "\n");
+     // ROS_INFO_STREAM("Kr: \n" << Kr << "\n");
   
      /* IN HERE, WE DEFINE A FIRST POSITIONAL REFERENCE TO OUR CONTROLLER */
 
@@ -266,8 +292,8 @@ int main(int argc, char **argv)
      Eigen::VectorXd rr; rr.resize(n_dofs);
      rr << ref_r.pose.position.x, ref_r.pose.position.y, ref_r.pose.position.z;
 
-     std::cout << "Eigen::VectorXd rh: \n" << rh << "\n";
-     std::cout << "Eigen::VectorXd rr: \n" << rr << "\n";
+     // std::cout << "Eigen::VectorXd rh: \n" << rh << "\n";
+     // std::cout << "Eigen::VectorXd rr: \n" << rr << "\n";
 
      // setPosReference for the Cooperative case
      cgt.setPosReference(rh,rr);  

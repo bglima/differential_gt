@@ -32,8 +32,7 @@ NonCoopGT::NonCoopGT(const int& n_dofs, const double& dt): n_dofs_(n_dofs), dt_(
   init_P12_       = true;
 }
 
-// This function is used whether the C matrix is not initialized in the other script and 
-// it automatically defines it.
+// This function is used whether the C matrix is not initialized in the other script and it automatically defines it.
 void NonCoopGT::setSysParams(const Eigen::MatrixXd& A,const Eigen::MatrixXd& B)
 {
   Eigen::MatrixXd C; C.resize(n_dofs_,2*n_dofs_); C.setZero();
@@ -64,13 +63,6 @@ bool NonCoopGT::getSysParams(Eigen::MatrixXd& A,Eigen::MatrixXd& B,Eigen::Matrix
   A = A_;
   B = B_;
   C = C_;
-
-  // // Print the System Parameters for the Non-cooperative case.
-  // std::cout<<"SYSTEM PARAMETERS NON-COOPERATIVE CASE: \n";
-
-  // ROS_INFO_STREAM("A: \n" << A << "\n");
-  // ROS_INFO_STREAM("B: \n" << B << "\n");
-  // ROS_INFO_STREAM("C: \n" << C << "\n"); 
   
   return true;
 }
@@ -111,13 +103,6 @@ bool NonCoopGT::getCostMatrices(Eigen::MatrixXd& Q1,Eigen::MatrixXd& Q2,Eigen::M
   R1 = R1_;
   R2 = R2_;
 
-  // // Print the Non-cooperative cost matrices.
-  // std::cout<< "COST PARAMETERS NON-COOPERATIVE CASE: \n";
-  
-  // ROS_INFO_STREAM("Q1: \n"<< Q1 << "\n");
-  // ROS_INFO_STREAM("Q2: \n"<< Q2 << "\n");
-  // ROS_INFO_STREAM("R1: \n"<< R1 << "\n");
-  // ROS_INFO_STREAM("R2: \n"<< R2 << "\n");
   // ROS_INFO_STREAM("R12: \n"<< R12_ << "\n");
   // ROS_INFO_STREAM("R21: \n"<< R21_ << "\n");
 
@@ -243,7 +228,15 @@ Eigen::MatrixXd NonCoopGT::solveRiccati(const Eigen::MatrixXd &A,
   Eigen::MatrixXd Ham = Eigen::MatrixXd::Zero(2 * dim_x, 2 * dim_x);
   Ham << A, -B * R.inverse() * B.transpose(), -Q, -A.transpose();
 
+  // ROS_INFO_STREAM("Ham: \n" << Ham << "\n");
+
   Eigen::EigenSolver<Eigen::MatrixXd> Eigs(Ham);
+
+  // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues() << "\n");
+  // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues()[0].real() << "\n");
+  // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues()[0].imag() << "\n");
+  // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");
+
 
   Eigen::MatrixXcd eigvec = Eigen::MatrixXcd::Zero(2 * dim_x, dim_x);
   int j = 0;
@@ -254,9 +247,19 @@ Eigen::MatrixXd NonCoopGT::solveRiccati(const Eigen::MatrixXd &A,
     }
   }
 
+  // ROS_INFO_STREAM("Eigvec: \n" << eigvec << "\n");
+
   Eigen::MatrixXcd Vs_1, Vs_2;
   Vs_1 = eigvec.block(0, 0, dim_x, dim_x);
   Vs_2 = eigvec.block(dim_x, 0, dim_x, dim_x);
+
+  // ROS_INFO_STREAM("Vs_1: \n" << Vs_1 << "\n");
+  // ROS_INFO_STREAM("Determinant of Vs_1: \n" << Vs_1.determinant() << "\n");
+
+  // ROS_INFO_STREAM("Vs_2: \n" << Vs_2 << "\n");
+  // ROS_INFO_STREAM("Determinant of Vs_2: \n" << Vs_2.determinant() << "\n");
+
+
   P = (Vs_2 * Vs_1.inverse()).real();
 
   
@@ -283,7 +286,13 @@ void NonCoopGT::solveNashEquilibrium(const Eigen::MatrixXd &A,
   if (init_P12_)
   {
     solveRiccati(A,B1,Q1,R1,P1);
+
+    // ROS_INFO_STREAM("P1: \n" << P1 << "\n");
+
     solveRiccati(A,B2,Q2,R2,P2);
+
+    // ROS_INFO_STREAM("P2: \n" << P2 << "\n");
+
     P1_prev_ = P1;
     P2_prev_ = P2;
     init_P12_ = false;
@@ -301,7 +310,12 @@ void NonCoopGT::solveNashEquilibrium(const Eigen::MatrixXd &A,
   while (err_1>toll && err_2>toll)
   {    
     Eigen::MatrixXd A1 = A - S2*P2;
+
+    // ROS_INFO_STREAM("A1: \n" << A1 << "\n");
+
     Eigen::MatrixXd A2 = A - S1*P1;
+
+    // ROS_INFO_STREAM("A2: \n" << A2 << "\n");
     
     Eigen::MatrixXd Q_1 = Q1 + P1*S21*P1;
     solveRiccati(A1,B1,Q_1,R1,P1);
