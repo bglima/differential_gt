@@ -11,7 +11,7 @@
 #include <eigen_conversions/eigen_msg.h>
 
 // First definition of the alpha value so that a first computation can be done.
-double alpha = 0.01;
+double alpha = 0.001;
 
 // Definition of the human and robot references that will be assigned through the subscription.
 geometry_msgs::PoseStamped ref_h;
