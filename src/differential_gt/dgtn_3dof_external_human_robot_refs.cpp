@@ -138,7 +138,7 @@ int main(int argc, char **argv)
 
      // In this case, the n_dofs variable is extended to 6. The parameters that are modified come from the 
      // gt_traj_arbitration package of Paolo Franceschi's repository (https://github.com/paolofrance/gt_traj_arbitration)
-     double dt = 0.01;
+     double dt = 0.033;
 
      // Defining the Identity and Null Matrices
      Eigen::MatrixXd O; O.resize(n_dofs, n_dofs); O.setZero();
@@ -334,23 +334,23 @@ int main(int argc, char **argv)
 
      // Instead of considering the /state/pose topic, we will consider the topic which the impedance controller is subscribed to
 
-     ros::Publisher commanded_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/cartesian_impedance_example_controller/equilibrium_pose", 1);
-     ros::Publisher commanded_velocity_pub = n.advertise<geometry_msgs::TwistStamped>("/state/velocity", 1);
+     ros::Publisher commanded_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/cartesian_impedance_example_controller/equilibrium_pose", 30);
+     ros::Publisher commanded_velocity_pub = n.advertise<geometry_msgs::TwistStamped>("/state/velocity", 30);
 
-     ros::Publisher human_reference_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/reference/human/pose", 1);
-     ros::Publisher human_reference_velocity_pub = n.advertise<geometry_msgs::TwistStamped>("/reference/human/velocity", 1);
+     ros::Publisher human_reference_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/reference/human/pose", 30);
+     ros::Publisher human_reference_velocity_pub = n.advertise<geometry_msgs::TwistStamped>("/reference/human/velocity", 30);
 
-     ros::Publisher robot_reference_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/reference/robot/pose", 1);
-     ros::Publisher robot_reference_velocity_pub = n.advertise<geometry_msgs::TwistStamped>("/reference/robot/velocity", 1);
+     ros::Publisher robot_reference_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/reference/robot/pose", 30);
+     ros::Publisher robot_reference_velocity_pub = n.advertise<geometry_msgs::TwistStamped>("/reference/robot/velocity", 30);
 
-     ros::Publisher weighted_reference_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/reference/weighted/pose", 1);
-     ros::Publisher weighted_reference_velocity_pub = n.advertise<geometry_msgs::TwistStamped>("/reference/weighted/velocity", 1);
+     ros::Publisher weighted_reference_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/reference/weighted/pose", 30);
+     ros::Publisher weighted_reference_velocity_pub = n.advertise<geometry_msgs::TwistStamped>("/reference/weighted/velocity", 30);
 
-     ros::Publisher optimal_control_robot_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/robot", 1);
-     ros::Publisher optimal_control_human_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/human", 1);
+     ros::Publisher optimal_control_robot_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/robot", 30);
+     ros::Publisher optimal_control_human_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/human", 30);
 
-     ros::Publisher optimal_control_human_weighted_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/human_weighted", 1);
-     ros::Publisher optimal_control_robot_weighted_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/robot_weighted", 1);
+     ros::Publisher optimal_control_human_weighted_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/human_weighted", 30);
+     ros::Publisher optimal_control_robot_weighted_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/robot_weighted", 30);
 
      // Create a ROS loop rate
      ros::Rate control_rate(1/dt);
