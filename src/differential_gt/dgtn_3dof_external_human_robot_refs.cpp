@@ -138,7 +138,8 @@ int main(int argc, char **argv)
 
      // In this case, the n_dofs variable is extended to 6. The parameters that are modified come from the 
      // gt_traj_arbitration package of Paolo Franceschi's repository (https://github.com/paolofrance/gt_traj_arbitration)
-     double dt = 0.033;
+     double rate = 30;
+     double dt = 1.0/rate;
 
      // Defining the Identity and Null Matrices
      Eigen::MatrixXd O; O.resize(n_dofs, n_dofs); O.setZero();
@@ -155,9 +156,9 @@ int main(int argc, char **argv)
      Eigen::MatrixXd K; K.resize(n_dofs, n_dofs);
 
      // Inizialization of system matrices
-     M << 10*I;
+     M << 1*I;
      K << O;
-     D << 25*I; // The previous parameter was 100*I
+     D << 5*I; // The previous parameter was 100*I
 
      // Initialize the linearized state space matrices
      Ac << O, I,
@@ -353,7 +354,7 @@ int main(int argc, char **argv)
      ros::Publisher optimal_control_robot_weighted_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/robot_weighted", 30);
 
      // Create a ROS loop rate
-     ros::Rate control_rate(1/dt);
+     ros::Rate control_rate(rate);
 
      // Create a ROS time reference from the starting moment
      ros::Time starting_time = ros::Time::now();
