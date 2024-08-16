@@ -156,9 +156,9 @@ int main(int argc, char **argv)
      Eigen::MatrixXd K; K.resize(n_dofs, n_dofs);
 
      // Inizialization of system matrices
-     M << 1*I;
+     M << 10*I;
      K << O;
-     D << 5*I; // The previous parameter was 100*I
+     D << 25*I; // The previous parameter was 100*I
 
      // Initialize the linearized state space matrices
      Ac << O, I,
@@ -215,7 +215,7 @@ int main(int argc, char **argv)
      
      // Initialize the control-input cost matrices
      Eigen::MatrixXd Rh; Rh.resize(n_dofs,n_dofs); Rh << 0.0005*I; 
-     Eigen::MatrixXd Rr; Rr.resize(n_dofs,n_dofs); Rr << 0.0005*I;
+     Eigen::MatrixXd Rr; Rr.resize(n_dofs,n_dofs); Rr << 0.0001*I;
 
      cgt.setAlpha(alpha);
 
