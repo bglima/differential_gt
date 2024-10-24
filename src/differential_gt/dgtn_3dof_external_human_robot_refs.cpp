@@ -158,7 +158,7 @@ int main(int argc, char **argv)
      // Inizialization of system matrices
      M << 10*I;
      K << O;
-     D << 100*I; // The previous parameter was 100*I
+     D << 25*I; // The previous parameter was 100*I
 
      // Initialize the linearized state space matrices
      Ac << O, I,
