@@ -11,7 +11,7 @@
 #include <eigen_conversions/eigen_msg.h>
 
 // First definition of the alpha value so that a first computation can be done.
-double alpha = 0.001;
+double alpha = 0.999;
 
 // Definition of the human and robot references that will be assigned through the subscription.
 geometry_msgs::PoseStamped ref_h;
@@ -156,9 +156,9 @@ int main(int argc, char **argv)
      Eigen::MatrixXd K; K.resize(n_dofs, n_dofs);
 
      // Inizialization of system matrices
-     M << 1*I;
+     M << 10*I;
      K << O;
-     D << 5*I; // The previous parameter was 100*I
+     D << 100*I; // The previous parameter was 100*I
 
      // Initialize the linearized state space matrices
      Ac << O, I,
@@ -166,6 +166,9 @@ int main(int argc, char **argv)
 
      Bc << O,
            M.inverse();
+
+     ROS_INFO_STREAM("Ac: \n" << Ac << "\n");
+     ROS_INFO_STREAM("Bc: \n" << Bc << "\n");
 
      /* SYSTEM PARAMETERS*/
 
@@ -215,7 +218,7 @@ int main(int argc, char **argv)
      
      // Initialize the control-input cost matrices
      Eigen::MatrixXd Rh; Rh.resize(n_dofs,n_dofs); Rh << 0.0005*I; 
-     Eigen::MatrixXd Rr; Rr.resize(n_dofs,n_dofs); Rr << 0.0005*I;
+     Eigen::MatrixXd Rr; Rr.resize(n_dofs,n_dofs); Rr << 0.0001*I;
 
      cgt.setAlpha(alpha);
 
@@ -282,10 +285,10 @@ int main(int argc, char **argv)
      Eigen::MatrixXd Kh,Kr;
      ncgt.getNonCooperativeGains(Kh,Kr);
 
-     // ROS_INFO_STREAM("Kgt: \n" << Kgt << "\n");
-     // ROS_INFO_STREAM("Kh: \n" << Kh << "\n");
-     // ROS_INFO_STREAM("Kr: \n" << Kr << "\n");
-  
+     ROS_INFO_STREAM("Kgt: \n" << Kgt << "\n");
+     ROS_INFO_STREAM("Kh: \n" << Kh << "\n");
+     ROS_INFO_STREAM("Kr: \n" << Kr << "\n");
+
      /* IN HERE, WE DEFINE A FIRST POSITIONAL REFERENCE TO OUR CONTROLLER */
 
      Eigen::VectorXd rh; rh.resize(n_dofs);
@@ -374,6 +377,23 @@ int main(int argc, char **argv)
      long double current_time = 0;
 
      ROS_INFO_STREAM("The controller is initialized. The demo starts now.");
+
+     Eigen::MatrixXd B_doubled; B_doubled.resize(6,6);
+     B_doubled << Bc, Bc;
+
+     Eigen::MatrixXd controlled_system; controlled_system.resize(6,6);
+     controlled_system << Ac - B_doubled*Kgt;
+
+     ROS_INFO_STREAM("controlled_system: \n" << controlled_system << "\n");
+
+     Eigen::EigenSolver<Eigen::MatrixXd> Eigs(controlled_system);
+
+     ROS_INFO_STREAM("Eigs(controlled_system) \n" << Eigs.eigenvalues() << "\n");
+     ROS_INFO_STREAM("Real part of the first eigenvalue: \n" << Eigs.eigenvalues()[0].real() << "\n");
+     ROS_INFO_STREAM("Imag part of the first eigenvalue Eigs: \n" << Eigs.eigenvalues()[0].imag() << "\n");
+     // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");
+
+     return 0;
 
      // Main loop
      while (ros::ok())

@@ -6,7 +6,7 @@
 #include <geometry_msgs/WrenchStamped.h>
 #include <std_msgs/Float32.h>
 
-double alpha = 0.1;
+double alpha = 0.999;
 
 /*
  The geometry_msgs/TwistStamped message type has inside a geometry_msgs/Twist message type, 
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
      spinner.start();
      
      int n_dofs=1;
-     double dt = 0.01;
+     double dt = 0.033;
      
      std::vector<double> time = range(0.0, 6 * M_PI - dt, dt); // M_PI = 3.14159
 
@@ -70,16 +70,27 @@ int main(int argc, char **argv)
 
      for (int i = 0; i<time.size(); i++)
      {
-          ref_h(i) = 0.5*std::sin(time[i]);
           
           if (i <= time.size() / 3)
-          ref_r(i) = 0;
+          {
+               ref_r(i) = 0;
+               ref_h(i) = 5;
+          }
+
 
           else if (i <= 2 * time.size() / 3)
-          ref_r(i) = 0.5*std::sin(time[i]);
+          {
+               ref_r(i) = 0.5;
+               ref_h(i) = 0;
+          }
+
 
           else
-          ref_r(i) = -0.5*std::sin(time[i]);
+          {
+               ref_r(i) = -0.5;
+               ref_h(i) = -5;
+          }
+          
      }
 
      Eigen::MatrixXd Ac; Ac.resize(2*n_dofs,2*n_dofs);
@@ -91,7 +102,7 @@ int main(int argc, char **argv)
      
      m = 10; // [Kg]
      k = 0; // [N/m]
-     c = 25; // [Ns/m]
+     c = 100; // [Ns/m]
      
      // Initialize the linearized state space matrices
      Ac << 0, 1,
@@ -101,6 +112,9 @@ int main(int argc, char **argv)
      1/m;
      
      Cc << 1, 0;
+
+     ROS_INFO_STREAM("Ac: \n" << Ac << "\n");
+     ROS_INFO_STREAM("Bc: \n" << Bc << "\n");
 
      /* SYSTEM PARAMETERS*/
 
@@ -134,14 +148,14 @@ int main(int argc, char **argv)
 
      // Human state-error-weight cost component based on robot references
      Qhr <<0,0,
-       0,0.0001;
+       0,0;
 
      // Robot state-error-weight cost component based on robot references
      Qrr <<1,0,
        0,0.0001;
 
      // Robot state-error-weight cost component based on human references
-     Qrh <<0.0001,0,
+     Qrh <<0,0,
        0,0;
      
      // Initialize the control-input cost matrices
@@ -284,6 +298,30 @@ int main(int argc, char **argv)
 
      // At this point, the initialization is complete.
      // The code asks for a key to continue the process
+
+     ROS_INFO_STREAM("Kgt: \n" << Kgt << "\n");
+     ROS_INFO_STREAM("Kh: \n" << Kh << "\n");
+     ROS_INFO_STREAM("Kr: \n" << Kr << "\n");
+
+     Eigen::MatrixXd B_doubled; B_doubled.resize(2*n_dofs,2*n_dofs);
+     B_doubled << Bc, Bc;
+
+     Eigen::MatrixXd controlled_system; controlled_system.resize(2*n_dofs,2*n_dofs);
+     controlled_system = (Ac - B_doubled*Kgt);
+
+     ROS_INFO_STREAM("controlled_system: \n" << controlled_system << "\n");
+
+     Eigen::EigenSolver<Eigen::MatrixXd> Eigs(controlled_system);
+
+     ROS_INFO_STREAM("Eigs(controlled_system) \n" << Eigs.eigenvalues() << "\n");
+     ROS_INFO_STREAM("Real part of the first eigenvalue: \n" << Eigs.eigenvalues()[0].real() << "\n");
+     ROS_INFO_STREAM("Imag part of the first eigenvalue Eigs: \n" << Eigs.eigenvalues()[0].imag() << "\n");
+     // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");
+
+     double peak_overshoot = pow(M_E,(-(abs(Eigs.eigenvalues()[0].real())/abs(Eigs.eigenvalues()[0].imag())*M_PI)));
+     ROS_INFO_STREAM("Peak overshoot: \n" << peak_overshoot << "\n");
+
+
      ROS_INFO_STREAM("The controller is initialized. Press ENTER to start the demo.");
      std::cin.get();
 

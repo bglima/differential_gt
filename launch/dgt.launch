@@ -1,6 +1,6 @@
 <launch>
   <!-- Lunch diff_game_theory node -->
-  <node name="diff_game_theory_node" pkg="differential_gt" type="diff_game_theory_node" respawn="false" 
+  <node name="diff_game_theory_node" pkg="differential_gt" type="dgtn" respawn="false" 
     args="" output="screen" />
 
   <!-- Plot controller's state -->
