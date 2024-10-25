@@ -11,7 +11,7 @@
 #include <eigen_conversions/eigen_msg.h>
 
 // First definition of the alpha value so that a first computation can be done.
-double alpha = 0.999;
+double alpha = 0.001;
 
 // Definition of the human and robot references that will be assigned through the subscription.
 geometry_msgs::PoseStamped ref_h;
@@ -377,23 +377,6 @@ int main(int argc, char **argv)
      long double current_time = 0;
 
      ROS_INFO_STREAM("The controller is initialized. The demo starts now.");
-
-     Eigen::MatrixXd B_doubled; B_doubled.resize(6,6);
-     B_doubled << Bc, Bc;
-
-     Eigen::MatrixXd controlled_system; controlled_system.resize(6,6);
-     controlled_system << Ac - B_doubled*Kgt;
-
-     ROS_INFO_STREAM("controlled_system: \n" << controlled_system << "\n");
-
-     Eigen::EigenSolver<Eigen::MatrixXd> Eigs(controlled_system);
-
-     ROS_INFO_STREAM("Eigs(controlled_system) \n" << Eigs.eigenvalues() << "\n");
-     ROS_INFO_STREAM("Real part of the first eigenvalue: \n" << Eigs.eigenvalues()[0].real() << "\n");
-     ROS_INFO_STREAM("Imag part of the first eigenvalue Eigs: \n" << Eigs.eigenvalues()[0].imag() << "\n");
-     // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");
-
-     return 0;
 
      // Main loop
      while (ros::ok())
