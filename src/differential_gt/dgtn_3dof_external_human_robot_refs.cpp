@@ -18,7 +18,7 @@ geometry_msgs::PoseStamped ref_h;
 geometry_msgs::PoseStamped ref_r;
 
 /* n_dofs definition. In this case, assuming that the orientation of the panda gripper is always in the same condition, 
-it is not relevant to control the three rotational components (roll, pitch, yaw). Thus, our intention is to control the 
+it's not relevant to control the three rotational components (roll, pitch, yaw). Thus, our intention is to control the 
 three translational components only. Hence, n_dofs = 3. 
 We read the three rotational components (in quaternion form) from the current pose of the robot end-effector in the 
 callback function defined below. */
@@ -119,7 +119,6 @@ int main(int argc, char **argv)
      ros::AsyncSpinner spinner(5);
      spinner.start();
 
-     // WE HAVE TO CHANGE THE SUBSCRIBER BUFFER IN ORDER TO WORK IN A PROPER WAY
 
      // Subscribing to a topic called '/alpha' so that we can have the alpha parameter coming from an external node. 
      ros::Subscriber alpha_sub = n.subscribe("/alpha", 30, alphaCallback);
@@ -136,8 +135,6 @@ int main(int argc, char **argv)
           ros::Duration(5).sleep();
      }
 
-     // In this case, the n_dofs variable is extended to 6. The parameters that are modified come from the 
-     // gt_traj_arbitration package of Paolo Franceschi's repository (https://github.com/paolofrance/gt_traj_arbitration)
      double rate = 30;
      double dt = 1.0/rate;
 
@@ -334,9 +331,12 @@ int main(int argc, char **argv)
      geometry_msgs::WrenchStamped optimal_control_human_weighted_msg;
      geometry_msgs::WrenchStamped optimal_control_robot_weighted_msg;
 
-     // Instantiate ROS publishers
+     // Instantiate Gain matrices messages
+     std_msgs::Float64MultiArray Kgt_msg;
+     std_msgs::Float64MultiArray Kh_msg;
+     std_msgs::Float64MultiArray Kr_msg;
 
-     // Instead of considering the /state/pose topic, we will consider the topic which the impedance controller is subscribed to
+     // Instantiate ROS publishers. Instead of considering the /state/pose topic, we will consider the topic which the impedance controller is subscribed to
 
      ros::Publisher commanded_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/cartesian_impedance_example_controller/equilibrium_pose", 30);
      ros::Publisher commanded_velocity_pub = n.advertise<geometry_msgs::TwistStamped>("/state/velocity", 30);
@@ -355,6 +355,10 @@ int main(int argc, char **argv)
 
      ros::Publisher optimal_control_human_weighted_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/human_weighted", 30);
      ros::Publisher optimal_control_robot_weighted_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/robot_weighted", 30);
+
+     ros::Publisher Kgt_pub = n.advertise<std_msgs::Float64MultiArray>("/Kgt", 30);
+     ros::Publisher Kh_pub = n.advertise<std_msgs::Float64MultiArray>("/Kh", 30);
+     ros::Publisher Kr_pub = n.advertise<std_msgs::Float64MultiArray>("/Kr", 30);
 
      // Create a ROS loop rate
      ros::Rate control_rate(rate);
@@ -399,8 +403,6 @@ int main(int argc, char **argv)
           ncgt.setPosReference(rh,rr);
           weighted_reference = cgt.getReference();
           ncgt.getReference(rh,rr);
-
-          current_time += dt;
           
           // We need to update the state with the real robot data. In this case, 
           // we will update with the last known state.
@@ -575,6 +577,54 @@ int main(int argc, char **argv)
           optimal_control_robot_weighted_msg.wrench.torque.y = 0;
           optimal_control_robot_weighted_msg.wrench.torque.z = 0;
 
+          // ADDED PART FOR THE GAIN MATRICES OF COOPERATIVE AND NON-COOPERATIVE CASES
+          if (alpha >= 0.5)
+          {
+               // Definition of the global B matrix for the cooperative case
+               Eigen::MatrixXd B_doubled; B_doubled.resize(6,6);
+               B_doubled << Bc, Bc;
+
+               // Definition of the controlled system in state-space form )cooperative case)
+               Eigen::MatrixXd controlled_system; controlled_system.resize(6,6);
+               controlled_system << Ac - B_doubled*Kgt;
+               // ROS_INFO_STREAM("controlled_system: \n" << controlled_system << "\n");
+
+               // Computation of eigenvalues and eigenvectors of the controlled system
+               Eigen::EigenSolver<Eigen::MatrixXd> Eigs(controlled_system);
+
+               // Printing the eigenvalues
+               // ROS_INFO_STREAM("Eigs(controlled_system) \n" << Eigs.eigenvalues() << "\n");
+               // ROS_INFO_STREAM("Real part of the first eigenvalue: \n" << Eigs.eigenvalues()[0].real() << "\n");
+               // ROS_INFO_STREAM("Imag part of the first eigenvalue Eigs: \n" << Eigs.eigenvalues()[0].imag() << "\n");
+               // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");    
+
+               // Conversion of Kgt matrix from Eigen::MatrixXd into a std_msgs/Float64MultiArray message
+               tf::matrixEigenToMsg(Kgt, Kgt_msg);
+               // ROS_INFO_STREAM("Kgt_msg: \n" << Kgt_msg << "\n");
+          }
+          else if (alpha < 0.5)
+          {
+               // Definition of the controlled system in state-space form (non-cooperative case)
+               Eigen::MatrixXd controlled_system; controlled_system.resize(6,6);
+               controlled_system << Ac - Bc*Kh - Bc*Kr;
+               // ROS_INFO_STREAM("controlled_system: \n" << controlled_system << "\n");
+
+               // Computation of the eigenvalues and eigenvectors of the controlled system
+               Eigen::EigenSolver<Eigen::MatrixXd> Eigs(controlled_system);
+
+               // Printing the eigenvalues
+               // ROS_INFO_STREAM("Eigs(controlled_system) \n" << Eigs.eigenvalues() << "\n");
+               // ROS_INFO_STREAM("Real part of the first eigenvalue: \n" << Eigs.eigenvalues()[0].real() << "\n");
+               // ROS_INFO_STREAM("Imag part of the first eigenvalue Eigs: \n" << Eigs.eigenvalues()[0].imag() << "\n");
+               // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");
+
+               // Conversion of Kh and Kr matrices from Eigen::MatrixXd into a std_msgs/Float64MultiArray message
+               tf::matrixEigenToMsg(Kh, Kh_msg);
+               tf::matrixEigenToMsg(Kr, Kr_msg);
+               // ROS_INFO_STREAM("Kh_msg: \n" << Kh_msg << "\n");
+               // ROS_INFO_STREAM("Kr_msg: \n" << Kr_msg << "\n");
+          }
+
           // Publish messages
           commanded_pose_pub.publish(commanded_pose_msg);
           commanded_velocity_pub.publish(commanded_velocity_msg);
@@ -593,6 +643,13 @@ int main(int argc, char **argv)
 
           optimal_control_human_weighted_pub.publish(optimal_control_human_weighted_msg);
           optimal_control_robot_weighted_pub.publish(optimal_control_robot_weighted_msg);
+
+          Kgt_pub.publish(Kgt_msg);
+          Kh_pub.publish(Kh_msg);
+          Kr_pub.publish(Kr_msg);
+
+          // Update the current time
+          current_time += dt;
 
           // Synchronize
           control_rate.sleep();

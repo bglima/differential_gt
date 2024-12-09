@@ -3,46 +3,49 @@
 import rospy
 import std_msgs.msg
 
+def publish_alpha():
 
-def talker():
-    pub = rospy.Publisher('/alpha', std_msgs.msg.Float32, queue_size=10)
+    # Publisher node definition
+    pub = rospy.Publisher('/alpha', std_msgs.msg.Float32, queue_size=30)
     rospy.init_node('alpha_publisher', anonymous=True)
-    rate = rospy.Rate(1/8) 
+
+    # Alpha definition
     alpha = std_msgs.msg.Float32()
     alpha.data = 0
-    t = rospy.get_rostime()
-    d = rospy.Duration.from_sec(8)
+    alpha_step = 0.001
+
+    # Publishing rate and duration definition
+    rate = 30
+    t = rospy.Time(0)
+    d = rospy.Duration.from_sec(1.0/rate)
+    Rate = rospy.Rate(rate)
+
+    # Waiting for connecting the publisher node previously generated
+    while pub.get_num_connections() < 1:
+        rospy.loginfo("Waiting for connection of at least another node to the /alpha topic ...")
+        rospy.sleep(5)
+
+    # Publishing alpha iteratively with an increasing step of 0.001
     while not rospy.is_shutdown():
-        t_now = rospy.Time.now()
-        time_interval = t_now - t
+        
+        if alpha.data >= 0.999:
+            alpha.data = 0.999
+        else:
+            alpha.data += alpha_step
+            alpha.data = round(alpha.data,3)
+        
+        # Print the current value of alpha
+        # print("-------")
+        # rospy.loginfo(t.to_sec())
+        # rospy.loginfo(alpha)
+        pub.publish(alpha)
+        t += d
 
-        if alpha.data >= 0.9:
-            print("")
-            print("alpha publication from 0.1 to 0.9 with step 0.1 completed!")
-            input("Press 'Enter' to set alpha again to 0.1")
-            alpha.data = 0.1
-            print("-------")
-            rospy.loginfo(time_interval.to_sec())
-            rospy.loginfo(alpha)
-            pub.publish(alpha)
-            rate.sleep()
-            break
-
-        if time_interval < d:
-            alpha.data = alpha.data + 0.1
-            alpha.data = round(alpha.data,1)
-            print("-------")
-            rospy.loginfo(time_interval.to_sec())
-            rospy.loginfo(alpha)
-            pub.publish(alpha)
-            rate.sleep()
-        elif time_interval > d:
-            t = rospy.Time.now()
-
-
+        # Keeping the publishing rate more or less fixed
+        Rate.sleep()
 
 if __name__ == '__main__':
     try:
-        talker()
+        publish_alpha()
     except rospy.ROSInterruptException:
         pass
