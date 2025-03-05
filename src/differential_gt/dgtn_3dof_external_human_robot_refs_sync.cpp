@@ -9,10 +9,18 @@
 #include <tf_conversions/tf_eigen.h>
 #include <tf2_eigen/tf2_eigen.h>
 #include <eigen_conversions/eigen_msg.h>
+#include <message_filters/subscriber.h>
+#include <message_filters/time_synchronizer.h>
 #include <differential_gt/alpha_with_header.h>
+#include <differential_gt/Kgt_with_header.h>
+#include <differential_gt/Kh_with_header.h>
+#include <differential_gt/Kr_with_header.h>
 
 // First definition of the alpha value so that a first computation can be done.
 differential_gt::alpha_with_header alpha_with_header_msg;
+differential_gt::Kgt_with_header Kgt_with_header_msg;
+differential_gt::Kh_with_header Kh_with_header_msg;
+differential_gt::Kr_with_header Kr_with_header_msg;
 
 // Definition of the human and robot references that will be assigned through the subscription.
 geometry_msgs::PoseStamped ref_h;
@@ -29,34 +37,30 @@ int n_dofs = 3;
 Eigen::VectorXd Z = Eigen::VectorXd::Zero(2*n_dofs);
 Eigen::VectorXd dZ = Eigen::VectorXd::Zero(2*n_dofs);
 
-// Indicates if the first initial robot pose is received.
+// Indicates if the first initial robot pose is received
 bool initial_robot_state_ok = false;
 
-// Callback function used for receiving the alpha parameter from another node.
-void alphaCallback(const differential_gt::alpha_with_header::ConstPtr& alpha_msg)
-{
+// Indicates if the ros::Time::now() returns 0 as a value
+bool non_zero_value = false;
+
+// Definition of a unique Callback for the Time Synchronization
+void Callback(const geometry_msgs::PoseStamped::ConstPtr& human_ref_msg,
+               const geometry_msgs::PoseStamped::ConstPtr& robot_ref_msg, 
+               const differential_gt::alpha_with_header::ConstPtr& alpha_msg)
+{    
+     // Receiving the human reference message and storing it in the ref_h variable
+     ref_h.pose.position.x = human_ref_msg->pose.position.x;
+     ref_h.pose.position.y = human_ref_msg->pose.position.y;
+     ref_h.pose.position.z = human_ref_msg->pose.position.z;
+
+     // Receiving the robot reference message and storing it in the ref_r variable
+     ref_r.pose.position.x = robot_ref_msg->pose.position.x;
+     ref_r.pose.position.y = robot_ref_msg->pose.position.y;
+     ref_r.pose.position.z = robot_ref_msg->pose.position.z;
+
+     // Receiving the alpha parameter and storing it in the alpha_with_header_msg
      alpha_with_header_msg.header.stamp = alpha_msg->header.stamp;
      alpha_with_header_msg.alpha.data = alpha_msg->alpha.data;
-}
-
-// Callback function used for receiving the human reference from another node.
-void human_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
-{
-     // In this case, the rotational components are not updated because of the above consideration
-     ref_h.pose.position.x = msg->pose.position.x;
-     ref_h.pose.position.y = msg->pose.position.y;
-     ref_h.pose.position.z = msg->pose.position.z;
-
-}
-
-// Callback function used for receiving the robot reference from another node.
-void robot_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
-{
-     // In this case, the rotational components are not updated because of the above consideration
-     ref_r.pose.position.x = msg->pose.position.x;
-     ref_r.pose.position.y = msg->pose.position.y;
-     ref_r.pose.position.z = msg->pose.position.z;
-
 }
 
 // Callback function used for receiving the initial state of the robot.
@@ -107,6 +111,34 @@ void current_robot_stateCallback(const franka_msgs::FrankaStateConstPtr& msg)
      initial_robot_state_ok = true;
 }
 
+// Callback function used for receiving the human reference from another node.
+void human_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
+{
+     // In this case, the rotational components are not updated because of the above consideration
+     ref_h.pose.position.x = msg->pose.position.x;
+     ref_h.pose.position.y = msg->pose.position.y;
+     ref_h.pose.position.z = msg->pose.position.z;
+
+}
+
+// Callback function used for receiving the robot reference from another node.
+void robot_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
+{
+     // In this case, the rotational components are not updated because of the above consideration
+     ref_r.pose.position.x = msg->pose.position.x;
+     ref_r.pose.position.y = msg->pose.position.y;
+     ref_r.pose.position.z = msg->pose.position.z;
+
+}
+
+// Callback function used for receiving the alpha parameter from another node.
+void alphaCallback(const differential_gt::alpha_with_header::ConstPtr& alpha_msg)
+{
+     alpha_with_header_msg.header.stamp = alpha_msg->header.stamp;
+     alpha_with_header_msg.alpha.data = alpha_msg->alpha.data;
+}
+
+
 int main(int argc, char **argv)
 {    
      // Defining the ros node. The third argument is the name of the node
@@ -121,20 +153,43 @@ int main(int argc, char **argv)
      ros::AsyncSpinner spinner(5);
      spinner.start();
 
-     // Subscribing to a topic called '/alpha' so that we can have the alpha parameter coming from an external node. 
-     ros::Subscriber alpha_sub = n.subscribe("/alpha", 30, alphaCallback);
-     // Subscribing to a topic called '/human_ref' so that we can have the human reference coming from an external node.
+     // Subscribing to a topic called '/franka_state_controller/franka_states' so that we can have the actual state of the robot.
+     ros::Subscriber current_robot_state_sub = n.subscribe("/franka_state_controller/franka_states", 30, current_robot_stateCallback); 
+     //Subscribing to a topic called '/human_ref' so that we can have the human reference coming from an external node.
      ros::Subscriber human_ref_sub = n.subscribe("/human_ref", 30, human_refCallback);
      // Subscribing to a topic called '/robot_ref' so that we can have the robot reference coming from an external node.
      ros::Subscriber robot_ref_sub = n.subscribe("/robot_ref", 30, robot_refCallback);
-     // Subscribing to a topic called '/franka_state_controller/franka_states' so that we can have the actual state of the robot.
-     ros::Subscriber current_robot_state_sub = n.subscribe("/franka_state_controller/franka_states", 30, current_robot_stateCallback); 
-     
+     // Subscribing to a topic called '/alpha' so that we can have the alpha parameter coming from an external node. 
+     ros::Subscriber alpha_sub = n.subscribe("/alpha", 30, alphaCallback);
+
+     // // Definition of the synchronized subscription to the following topics: /human_ref, robot_ref, /alpha
+     // message_filters::Subscriber<geometry_msgs::PoseStamped> human_ref_sub(n, "/human_ref", 30);
+     // message_filters::Subscriber<geometry_msgs::PoseStamped> robot_ref_sub(n, "/robot_ref", 30);
+     // message_filters::Subscriber<differential_gt::alpha_with_header> alpha_sub(n, "/alpha", 30);
+     // message_filters::TimeSynchronizer<geometry_msgs::PoseStamped, 
+     //      geometry_msgs::PoseStamped,  
+     //      differential_gt::alpha_with_header> sync(human_ref_sub, robot_ref_sub, alpha_sub, 1);
+     // sync.registerCallback(boost::bind(&Callback, _1, _2, _3));
+
      while(!initial_robot_state_ok)
      {
           ROS_INFO("waiting for an initial robot pose");
           ros::Duration(5).sleep();
      }
+
+     // Create a ROS time reference from the starting moment
+     ros::Time seconds_from_start = ros::Time(0);
+     while (!non_zero_value)
+     {
+          seconds_from_start = ros::Time::now();
+          // ROS_INFO_STREAM("seconds_from_start (inside the loop): " << seconds_from_start << "\n");
+          if (seconds_from_start != ros::Time(0))
+               non_zero_value = true;
+     }
+     // std::cout << "seconds_from_start (outside the loop): " << seconds_from_start << "\n";
+
+     alpha_with_header_msg.header.stamp = seconds_from_start;
+     alpha_with_header_msg.alpha.data = 0.001;
 
      double rate = 30;
      double dt = 1.0/rate;
@@ -218,9 +273,6 @@ int main(int argc, char **argv)
      Eigen::MatrixXd Rh; Rh.resize(n_dofs,n_dofs); Rh << 0.0005*I; 
      Eigen::MatrixXd Rr; Rr.resize(n_dofs,n_dofs); Rr << 0.0001*I;
 
-     alpha_with_header_msg.header.stamp = ros::Time();
-     alpha_with_header_msg.alpha.data = 0.001;
-
      cgt.setAlpha(alpha_with_header_msg.alpha.data);
 
      /* SET THE DIFF GAME THEORY PARAMETERS*/
@@ -279,7 +331,7 @@ int main(int argc, char **argv)
      // The following method computes the Non-Cooperative gains Kh and Kr
      ncgt.computeNonCooperativeGains();
 
-     // Initialize and the Cooperative gain   
+     // Initialize and the Cooperative gain
      Eigen::MatrixXd Kgt = cgt.getCooperativeGains();
 
      // Get the Non-Cooperative gains
@@ -327,6 +379,8 @@ int main(int argc, char **argv)
      geometry_msgs::PoseStamped weighted_reference_pose_msg;
      geometry_msgs::TwistStamped weighted_reference_velocity_msg;
 
+     differential_gt::alpha_with_header alpha_with_header_gt_msg;
+
      // Instantiate ROS control messages
 
      geometry_msgs::WrenchStamped optimal_control_robot_msg;
@@ -334,11 +388,6 @@ int main(int argc, char **argv)
 
      geometry_msgs::WrenchStamped optimal_control_human_weighted_msg;
      geometry_msgs::WrenchStamped optimal_control_robot_weighted_msg;
-
-     // Instantiate Gain matrices messages
-     std_msgs::Float64MultiArray Kgt_msg;
-     std_msgs::Float64MultiArray Kh_msg;
-     std_msgs::Float64MultiArray Kr_msg;
 
      // Instantiate ROS publishers. Instead of considering the /state/pose topic, we will consider the topic which the impedance controller is subscribed to
 
@@ -360,16 +409,14 @@ int main(int argc, char **argv)
      ros::Publisher optimal_control_human_weighted_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/human_weighted", 30);
      ros::Publisher optimal_control_robot_weighted_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/robot_weighted", 30);
 
-     ros::Publisher Kgt_pub = n.advertise<std_msgs::Float64MultiArray>("/Kgt", 30);
-     ros::Publisher Kh_pub = n.advertise<std_msgs::Float64MultiArray>("/Kh", 30);
-     ros::Publisher Kr_pub = n.advertise<std_msgs::Float64MultiArray>("/Kr", 30);
+     ros::Publisher Kgt_pub = n.advertise<differential_gt::Kgt_with_header>("/Kgt", 30);
+     ros::Publisher Kh_pub = n.advertise<differential_gt::Kh_with_header>("/Kh", 30);
+     ros::Publisher Kr_pub = n.advertise<differential_gt::Kr_with_header>("/Kr", 30);
+
+     ros::Publisher alpha_gt = n.advertise<differential_gt::alpha_with_header>("/alpha_gt", 30);
 
      // Create a ROS loop rate
      ros::Rate control_rate(rate);
-
-     // Create a ROS time reference from the starting moment
-     ros::Time starting_time = ros::Time::now();
-     ros::Time seconds_from_start;
 
      // Create a control object store future optimal control inputs for the Cooperative case
      Eigen::VectorXd coop_control;
@@ -381,10 +428,8 @@ int main(int argc, char **argv)
      ncgt.computeControlInputs();
      ncgt.getControlInput(non_coop_control);
 
-     // Index initialization
-     long double current_time = 0;
-
      ROS_INFO_STREAM("The controller is initialized. The demo starts now.");
+     // std::cin.get();
 
      // Main loop
      while (ros::ok())
@@ -445,8 +490,7 @@ int main(int argc, char **argv)
           // ROS_INFO_STREAM("cgt_state: " << cgt_state.transpose());
           // ROS_INFO_STREAM("ncgt_state: " << ncgt_state.transpose());
 
-          // Update time
-          seconds_from_start = ros::Time(current_time);
+          // ROS_INFO_STREAM("alpha msg: " << alpha_with_header_msg << "\n");
 
           // Update time from message headers
           commanded_pose_msg.header.stamp = seconds_from_start;
@@ -466,6 +510,12 @@ int main(int argc, char **argv)
 
           optimal_control_human_weighted_msg.header.stamp = seconds_from_start;
           optimal_control_robot_weighted_msg.header.stamp = seconds_from_start;
+
+          Kgt_with_header_msg.header.stamp = seconds_from_start;
+          Kh_with_header_msg.header.stamp = seconds_from_start;
+          Kr_with_header_msg.header.stamp = seconds_from_start;
+
+          alpha_with_header_gt_msg.header.stamp = seconds_from_start;
 
           // Update the reference messages. They are positional references only.
           
@@ -581,6 +631,9 @@ int main(int argc, char **argv)
           optimal_control_robot_weighted_msg.wrench.torque.y = 0;
           optimal_control_robot_weighted_msg.wrench.torque.z = 0;
 
+          // Update the alpha_with_header_gt_msg 
+          alpha_with_header_gt_msg.alpha.data = alpha_with_header_msg.alpha.data;
+
           // ADDED PART FOR THE GAIN MATRICES OF COOPERATIVE AND NON-COOPERATIVE CASES
           if (alpha_with_header_msg.alpha.data >= 0.5)
           {
@@ -603,8 +656,8 @@ int main(int argc, char **argv)
                // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");    
 
                // Conversion of Kgt matrix from Eigen::MatrixXd into a std_msgs/Float64MultiArray message
-               tf::matrixEigenToMsg(Kgt, Kgt_msg);
-               // ROS_INFO_STREAM("Kgt_msg: \n" << Kgt_msg << "\n");
+               tf::matrixEigenToMsg(Kgt, Kgt_with_header_msg.Kgt);
+               // ROS_INFO_STREAM("Kgt_with_header_msg: \n" << Kgt_with_header_msg << "\n");
           }
           else if (alpha_with_header_msg.alpha.data < 0.5)
           {
@@ -623,10 +676,10 @@ int main(int argc, char **argv)
                // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");
 
                // Conversion of Kh and Kr matrices from Eigen::MatrixXd into a std_msgs/Float64MultiArray message
-               tf::matrixEigenToMsg(Kh, Kh_msg);
-               tf::matrixEigenToMsg(Kr, Kr_msg);
-               // ROS_INFO_STREAM("Kh_msg: \n" << Kh_msg << "\n");
-               // ROS_INFO_STREAM("Kr_msg: \n" << Kr_msg << "\n");
+               tf::matrixEigenToMsg(Kh, Kh_with_header_msg.Kh);
+               tf::matrixEigenToMsg(Kr, Kr_with_header_msg.Kr);
+               // ROS_INFO_STREAM("Kh_with_header_msg: \n" << Kh_with_header_msg << "\n");
+               // ROS_INFO_STREAM("Kr_with_header_msg: \n" << Kr_with_header_msg << "\n");
           }
 
           // Publish messages
@@ -648,21 +701,19 @@ int main(int argc, char **argv)
           optimal_control_human_weighted_pub.publish(optimal_control_human_weighted_msg);
           optimal_control_robot_weighted_pub.publish(optimal_control_robot_weighted_msg);
 
-          Kgt_pub.publish(Kgt_msg);
-          Kh_pub.publish(Kh_msg);
-          Kr_pub.publish(Kr_msg);
+          Kgt_pub.publish(Kgt_with_header_msg);
+          Kh_pub.publish(Kh_with_header_msg);
+          Kr_pub.publish(Kr_with_header_msg);
+
+          alpha_gt.publish(alpha_with_header_gt_msg);
 
           // Update the current time
-          current_time += dt;
+          seconds_from_start += ros::Duration(dt);
+          // ROS_INFO_STREAM("seconds_from_start: " << seconds_from_start << "\n");
 
           // Synchronize
           control_rate.sleep();
      }
-     spinner.stop();
-  return 0;
+     ros::waitForShutdown();
+     return 0;
 }
-
-
-
-
-

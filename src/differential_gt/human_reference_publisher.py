@@ -12,16 +12,19 @@ def publish_human_reference():
     # human_reference message type definition
     human_reference = geometry_msgs.msg.PoseStamped()
 
-    # Publishing rate and duration definition
-    rate = 30
-    t = rospy.Time(0)
-    d = rospy.Duration.from_sec(1.0/rate)
-    Rate = rospy.Rate(rate)
-
     # Waiting for connecting the publisher node previously generated 
     while pub.get_num_connections() < 1:
         rospy.loginfo("Waiting for connection of at least another node to the /human_ref topic ...")
-        rospy.sleep(5)
+        rospy.sleep(10)
+
+    # Publishing rate and duration definition
+    rate = 30
+    t = 0
+    while not t:
+        t = rospy.Time.now()
+    
+    d = rospy.Duration.from_sec(1.0/rate)
+    Rate = rospy.Rate(rate)
     
     # Publishing the simulated and static human reference iteratively
     while not rospy.is_shutdown():

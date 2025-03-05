@@ -12,16 +12,19 @@ def publish_robot_reference():
     # robot_reference message type definition
     robot_reference = geometry_msgs.msg.PoseStamped()
 
-    # Publishing rate and duration definition
-    rate = 30
-    t = rospy.Time(0)
-    d = rospy.Duration.from_sec(1.0/rate)
-    Rate = rospy.Rate(rate)
-
     # Waiting for connecting the publisher node previously generated 
     while pub.get_num_connections() < 1:
         rospy.loginfo("Waiting for connection of at least another node to the /robot_ref topic ...")
-        rospy.sleep(5)
+        rospy.sleep(10)
+
+    # Publishing rate and duration definition
+    rate = 30
+    t = 0
+    while not t:
+        t = rospy.Time.now()
+        
+    d = rospy.Duration.from_sec(1.0/rate)
+    Rate = rospy.Rate(rate)
 
     # Publishing the simulated and static robot reference iteratively
     while not rospy.is_shutdown():

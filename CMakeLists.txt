@@ -16,15 +16,29 @@ tf2_ros
 tf2_eigen
 eigen_conversions
 tf_conversions
+std_msgs
+message_generation
 )
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
+add_message_files(
+  FILES
+  alpha_with_header.msg
+  Kgt_with_header.msg
+  Kh_with_header.msg
+  Kr_with_header.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES cgt ncgt
- CATKIN_DEPENDS 
+ CATKIN_DEPENDS message_runtime
  DEPENDS EIGEN3
 )
 
@@ -71,6 +85,7 @@ add_executable(dgtn src/differential_gt/dgtn.cpp)
 add_executable(dgtn_6dof src/differential_gt/dgtn_6dof.cpp)
 add_executable(dgtn_6dof_external_human_robot_refs src/differential_gt/dgtn_6dof_external_human_robot_refs.cpp)
 add_executable(dgtn_3dof_external_human_robot_refs src/differential_gt/dgtn_3dof_external_human_robot_refs.cpp)
+add_executable(dgtn_3dof_external_human_robot_refs_sync src/differential_gt/dgtn_3dof_external_human_robot_refs_sync.cpp)
 
 target_link_libraries(dgtn_original_demo cgt ncgt ${catkin_LIBRARIES})
 target_link_libraries(ncgt_ros_node cgt ncgt ${catkin_LIBRARIES})
@@ -79,3 +94,4 @@ target_link_libraries(dgtn cgt ncgt ${catkin_LIBRARIES})
 target_link_libraries(dgtn_6dof cgt ncgt ${catkin_LIBRARIES})
 target_link_libraries(dgtn_6dof_external_human_robot_refs cgt ncgt ${catkin_LIBRARIES})
 target_link_libraries(dgtn_3dof_external_human_robot_refs cgt ncgt ${catkin_LIBRARIES})
+target_link_libraries(dgtn_3dof_external_human_robot_refs_sync cgt ncgt ${catkin_LIBRARIES})

@@ -1,4 +1,8 @@
 <launch>
+  <!-- Launch diff_game_theory node -->
+  <node name="diff_game_theory_node_3dof_external_human_robot_refs_sync" pkg="differential_gt" type="dgtn_3dof_external_human_robot_refs_sync" respawn="false" 
+    args="" output="screen" />
+
   <!-- Plot controller's state -->
   <arg name="plot_positions_and_references" default="true"/>
   <group if="$(arg plot_positions_and_references)">
@@ -18,11 +22,6 @@
     <!-- Launch alpha publisher node -->
     <node name="alpha_publisher" pkg="differential_gt" type="alpha_publisher.py" respawn="false" 
       args="" output="screen" />
-
   </group>
-
-  <!-- Launch diff_game_theory node -->
-  <node name="diff_game_theory_node_3dof_external_human_robot_refs" pkg="differential_gt" type="dgtn_3dof_external_human_robot_refs" respawn="false" 
-    args="" output="screen" />
 
 </launch>
