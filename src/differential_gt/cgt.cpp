@@ -2,7 +2,7 @@
 #include <std_msgs/Float32.h>
 
 
-CoopGT::CoopGT(const int& n_dofs, const double& dt): n_dofs_(n_dofs), dt_(dt)
+CoopGT::CoopGT(const int& n_dofs, const double& dt, const bool& GT_disabled): n_dofs_(n_dofs), dt_(dt), GT_disabled_(GT_disabled)
 {
   A_.resize(2*n_dofs_,2*n_dofs_);
   B_.resize(2*n_dofs_,n_dofs_);
@@ -67,13 +67,15 @@ bool CoopGT::getSysParams(Eigen::MatrixXd& A,Eigen::MatrixXd& B,Eigen::MatrixXd&
   B = B_;
   C = C_;
 
-  // // Print the System Parameters for the Cooperative case.
-  // std::cout<<"SYSTEM PARAMETERS COOPERATIVE CASE: \n";
+  /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+          
+    // std::cout<<"SYSTEM PARAMETERS COOPERATIVE CASE: \n";
+    // ROS_INFO_STREAM("A: \n" << A << "\n");
+    // ROS_INFO_STREAM("B: \n" << B << "\n");
+    // ROS_INFO_STREAM("C: \n" << C << "\n"); 
+     
+  /*-----------------------------------------------------------------------*/
 
-  // ROS_INFO_STREAM("A: \n" << A << "\n");
-  // ROS_INFO_STREAM("B: \n" << B << "\n");
-  // ROS_INFO_STREAM("C: \n" << C << "\n"); 
-  
   return true;
 }
 
@@ -111,18 +113,22 @@ bool CoopGT::getCostMatrices(Eigen::MatrixXd& Q1,
   R1 = R1_;
   R2 = R2_;
 
-  // ROS_INFO_STREAM("QGT: \n" << Q_gt_ << "\n");
-  // ROS_INFO_STREAM("RGT: \n" << R_gt_ << "\n");
-  
+  /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+          
+    // ROS_INFO_STREAM("QGT: \n" << Q_gt_ << "\n");
+    // ROS_INFO_STREAM("RGT: \n" << R_gt_ << "\n");
+     
+  /*-----------------------------------------------------------------------*/
+
   return true;
 }
 
 
 bool CoopGT::setAlpha(const double& alpha)
 {
-  // if(alpha > 0.9 || alpha < 0.1)
+  // if(alpha > 0.999 || alpha < 0.001)
   // {
-  //   ROS_ERROR_STREAM("weight alpha must be 0 < alpha < 1 . Current value of alpha: " << alpha);
+  //   ROS_ERROR_STREAM("weight alpha must be 0 < alpha < 1. Current value of alpha: " << alpha);
   // }
   alpha_ = alpha;
   alpha_set_ = true;
@@ -169,8 +175,12 @@ void CoopGT::updateGTMatrices(const double& alpha)
 Eigen::VectorXd CoopGT::getCurrentState()
 {
 
-  // std::cout << "CURRENT STATE COOPERATIVE CASE:\n";
-  // ROS_INFO_STREAM("X:\n" << X_ << "\n");
+  /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+          
+    // std::cout << "CURRENT STATE COOPERATIVE CASE:\n";
+    // ROS_INFO_STREAM("X:\n" << X_ << "\n");
+     
+  /*-----------------------------------------------------------------------*/
 
   return X_;
 };
@@ -196,7 +206,7 @@ void CoopGT::computeCooperativeGains(const Eigen::MatrixXd& Q, const Eigen::Matr
   B_gt << B_,B_;
   Eigen::MatrixXd P_cgt;
   Eigen::MatrixXd kk = solveRiccati(A_, B_gt, Q, R, P_cgt);
-//   K_cgt_ = kk.diagonal().asDiagonal();
+  // K_cgt_ = kk.diagonal().asDiagonal();
   K_cgt_.topLeftCorner    (n_dofs_,n_dofs_) = kk.topLeftCorner    (n_dofs_,n_dofs_).diagonal().asDiagonal();
   K_cgt_.topRightCorner   (n_dofs_,n_dofs_) = kk.topRightCorner   (n_dofs_,n_dofs_).diagonal().asDiagonal();
   K_cgt_.bottomRightCorner(n_dofs_,n_dofs_) = kk.bottomRightCorner(n_dofs_,n_dofs_).diagonal().asDiagonal();
@@ -211,9 +221,13 @@ Eigen::MatrixXd CoopGT::getCooperativeGains()
   if(!gains_set_)
     ROS_WARN_STREAM("gains have not yet been computed ! ");
 
-  // Print the K_gt matrix
-  // std::cout << "GAIN MATRIX COOPERATIVE CASE: \n";
-  // ROS_INFO_STREAM("K_cgt: \n" << K_cgt_ << "\n");
+  /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+          
+    // Print the K_gt matrix
+    // std::cout << "GAIN MATRIX COOPERATIVE CASE: \n";
+    // ROS_INFO_STREAM("K_cgt: \n" << K_cgt_ << "\n");
+
+  /*-----------------------------------------------------------------------*/
 
   return K_cgt_;
 }
@@ -254,9 +268,13 @@ bool CoopGT::setReference(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& r
 Eigen::VectorXd CoopGT::getReference()
 {
 
-  // // print the weigthed reference
-  // std::cout << "WEIGHTED REFERENCE COOPERATIVE CASE: \n";
-  // ROS_INFO_STREAM("weighted_reference: \n" << reference_ << "\n");
+  /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+          
+    // print the weigthed reference
+    // std::cout << "WEIGHTED REFERENCE COOPERATIVE CASE: \n";
+    // ROS_INFO_STREAM("weighted_reference: \n" << reference_ << "\n");
+
+  /*-----------------------------------------------------------------------*/
 
   return reference_;
 }
@@ -273,14 +291,19 @@ Eigen::MatrixXd CoopGT::solveRiccati(const Eigen::MatrixXd &A,
   Eigen::MatrixXd Ham = Eigen::MatrixXd::Zero(2 * dim_x, 2 * dim_x);
   Ham << A, -B * R.inverse() * B.transpose(), -Q, -A.transpose();
 
-  // ROS_INFO_STREAM("Ham: \n" << Ham << "\n");
+
 
   Eigen::EigenSolver<Eigen::MatrixXd> Eigs(Ham);
 
-  // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues() << "\n");
-  // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues()[0].real() << "\n");
-  // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues()[0].imag() << "\n");
-  // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");
+  /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+
+    // ROS_INFO_STREAM("Ham: \n" << Ham << "\n");
+    // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues() << "\n");
+    // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues()[0].real() << "\n");
+    // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues()[0].imag() << "\n");
+    // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");
+
+  /*-----------------------------------------------------------------------*/
 
   Eigen::MatrixXcd eigvec = Eigen::MatrixXcd::Zero(2 * dim_x, dim_x);
   int j = 0;
@@ -293,18 +316,21 @@ Eigen::MatrixXd CoopGT::solveRiccati(const Eigen::MatrixXd &A,
     }
   }
 
-  // ROS_INFO_STREAM("Eigvec: \n" << eigvec << "\n");
 
   Eigen::MatrixXcd Vs_1, Vs_2;
   Vs_1 = eigvec.block(0, 0, dim_x, dim_x);
   Vs_2 = eigvec.block(dim_x, 0, dim_x, dim_x);
 
-  // ROS_INFO_STREAM("Vs_1: \n" << Vs_1 << "\n");
-  // ROS_INFO_STREAM("Vs_2: \n" << Vs_2 << "\n");
-
   P = (Vs_2 * Vs_1.inverse()).real();
 
-  // ROS_INFO_STREAM("P: \n" << P << "\n");
+  /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+
+    // ROS_INFO_STREAM("Eigvec: \n" << eigvec << "\n");
+    // ROS_INFO_STREAM("Vs_1: \n" << Vs_1 << "\n");
+    // ROS_INFO_STREAM("Vs_2: \n" << Vs_2 << "\n");
+    // ROS_INFO_STREAM("P: \n" << P << "\n");
+    
+  /*-----------------------------------------------------------------------*/
   
   return R.inverse()*B.transpose()*P;
 }
@@ -347,7 +373,7 @@ void CoopGT::solveNashEquilibrium(const Eigen::MatrixXd &A,const Eigen::MatrixXd
 }
 /////////////////////////////////////////////////////////////////////////////////////
 
-Eigen::VectorXd CoopGT::computeControlInputs()
+Eigen::VectorXd CoopGT::computeControlInputs(const Eigen::VectorXd& u_h_filt)
 {
   if (!state_ok_)
   {
@@ -362,6 +388,10 @@ Eigen::VectorXd CoopGT::computeControlInputs()
   reference_ok_ = false;
   
   Eigen::VectorXd control = -K_cgt_ * X_ + K_cgt_ * reference_;
+
+  if (GT_disabled_)
+    control.segment(0, n_dofs_) = u_h_filt;
+    control.segment(n_dofs_, n_dofs_).setZero();
 
   // // I comment this part at the moment since I don't why there wasit before.
   // if(n_dofs_>3)
@@ -384,13 +414,17 @@ void CoopGT::getControlInput(Eigen::VectorXd& control)
 
   control = -K_cgt_ * X_ + K_cgt_ * reference_;
 
-  // print the cooperative control input
-  // std::cout << "COOPERATIVE CONTROL INPUT (The first six elements are related to the u_human, while the remaining six are related to the u_robot): \n";
-  // ROS_INFO_STREAM("control input: \n" << control << "\n");
+  /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+
+    // // print the cooperative control input
+    // std::cout << "COOPERATIVE CONTROL INPUT: \n";
+    // ROS_INFO_STREAM("control input (after the step function)): \n" << control << "\n");
+
+  /*-----------------------------------------------------------------------*/
 
 }
 
-Eigen::VectorXd CoopGT::step(const Eigen::VectorXd& x, const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2)
+Eigen::VectorXd CoopGT::step(const Eigen::VectorXd& x, const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2, const Eigen::VectorXd& u_h_filtered)
 {
   if (x.size() != 2*n_dofs_)
   {
@@ -410,18 +444,26 @@ Eigen::VectorXd CoopGT::step(const Eigen::VectorXd& x, const Eigen::VectorXd& re
   else
     ROS_ERROR("references have an incorrect length .");
   
-  Eigen::VectorXd u = computeControlInputs();
-  
+  Eigen::VectorXd u = computeControlInputs(u_h_filtered);
+
+  // Compute the update
   setCurrentState(x);
   dX_ = A_*X_ + B_*u.segment(0,n_dofs_) + B_*u.segment(n_dofs_,n_dofs_);
   X_ = X_ + dX_*dt_;
 
+  // /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+
+  //   // Print Coop control input as a unique vector, in which two subvectors are defined (the first for the human and the second for the robot)
+  ROS_INFO_STREAM("control input (inside the step function): \n" << u.transpose() << "\n");
+
+  // /*-----------------------------------------------------------------------*/
+
   return X_;
 }
 
-Eigen::VectorXd CoopGT::step(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2)
+Eigen::VectorXd CoopGT::step(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2, const Eigen::VectorXd& u_h_filtered)
 {
-  return step(X_,ref_1,ref_2);
+  return step(X_,ref_1,ref_2, u_h_filtered);
 }
 
 

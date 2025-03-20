@@ -1,7 +1,7 @@
 #include <differential_gt/ncgt.h>
 
 
-NonCoopGT::NonCoopGT(const int& n_dofs, const double& dt): n_dofs_(n_dofs), dt_(dt)
+NonCoopGT::NonCoopGT(const int& n_dofs, const double& dt, const bool& GT_disabled): n_dofs_(n_dofs), dt_(dt), GT_disabled_(GT_disabled) 
 {
   A_.resize(2*n_dofs_,2*n_dofs_);
   B_.resize(2*n_dofs_,n_dofs_);
@@ -103,8 +103,12 @@ bool NonCoopGT::getCostMatrices(Eigen::MatrixXd& Q1,Eigen::MatrixXd& Q2,Eigen::M
   R1 = R1_;
   R2 = R2_;
 
-  // ROS_INFO_STREAM("R12: \n"<< R12_ << "\n");
-  // ROS_INFO_STREAM("R21: \n"<< R21_ << "\n");
+  /* PRINTING SECTION OF THE INTERESTED DATA ---------------------------------*/
+
+    // ROS_INFO_STREAM("R12: \n"<< R12_ << "\n");
+    // ROS_INFO_STREAM("R21: \n"<< R21_ << "\n");
+
+  /*--------------------------------------------------------------------------*/
 
   return true;
 }
@@ -124,8 +128,12 @@ bool NonCoopGT::setCurrentState(const Eigen::VectorXd& x)
 
 Eigen::VectorXd NonCoopGT::getCurrentState()
 {
-  // std::cout << "CURRENT STATE NON-COOPERATIVE CASE:\n";
-  // ROS_INFO_STREAM("X:\n" << X_ << "\n");
+  /* PRINTING SECTION OF THE INTERESTED DATA ---------------------------------*/
+
+    // std::cout << "CURRENT STATE NON-COOPERATIVE CASE:\n";
+    // ROS_INFO_STREAM("X:\n" << X_ << "\n");
+
+  /*--------------------------------------------------------------------------*/
 
   return X_;  
 };
@@ -144,10 +152,14 @@ void NonCoopGT::getNonCooperativeGains(Eigen::MatrixXd& K1, Eigen::MatrixXd& K2)
   if(!gains_set_)
     ROS_WARN_STREAM("gains have not yet been computed ! ");
 
-  // // Print the Non-Cooperative Gains
-  // std::cout << "GAIN MATRICES NON COOPERATIVE CASE: \n";
-  // ROS_INFO_STREAM("K1: \n" << K_1_ << "\n");
-  // ROS_INFO_STREAM("K2: \n" << K_2_ << "\n");
+  /* PRINTING SECTION OF THE INTERESTED DATA ---------------------------------*/
+
+    // Print the Non-Cooperative Gains
+    // std::cout << "GAIN MATRICES NON COOPERATIVE CASE: \n";
+    // ROS_INFO_STREAM("K1: \n" << K_1_ << "\n");
+    // ROS_INFO_STREAM("K2: \n" << K_2_ << "\n");
+
+  /*--------------------------------------------------------------------------*/
   
   K1 = K_1_;
   K2 = K_2_;
@@ -192,13 +204,17 @@ void NonCoopGT::getReference(Eigen::VectorXd& ref_1, Eigen::VectorXd& ref_2)
   ref_1 = ref_1_;
   ref_2 = ref_2_;
 
-  // print the human reference
-  // std::cout << "HUMAN REFERENCE NON-COOPERATIVE CASE: \n";
-  // ROS_INFO_STREAM("Human reference: \n" << ref_1 << "\n");
+  /* PRINTING SECTION OF THE INTERESTED DATA ---------------------------------*/
 
-  // // print the robot reference
-  // std::cout << "ROBOT REFERENCE NON-COOPERATIVE CASE: \n";
-  // ROS_INFO_STREAM("robot reference: \n" << ref_2 << "\n");
+    // print the human reference
+    // std::cout << "HUMAN REFERENCE NON-COOPERATIVE CASE: \n";
+    // ROS_INFO_STREAM("Human reference: \n" << ref_1 << "\n");
+
+    // // print the robot reference
+    // std::cout << "ROBOT REFERENCE NON-COOPERATIVE CASE: \n";
+    // ROS_INFO_STREAM("robot reference: \n" << ref_2 << "\n");
+
+  /*--------------------------------------------------------------------------*/
 }
 
 void NonCoopGT::getControlInput(Eigen::VectorXd& control)
@@ -208,12 +224,16 @@ void NonCoopGT::getControlInput(Eigen::VectorXd& control)
   Eigen::VectorXd u_2 = -K_2_ * (X_ - ref_2_);
 
   control.resize(2*n_dofs_);
+
   control << u_1,u_2;
 
-  // Print the non-cooperative control inputs in a unique vector
-  // std::cout << "NON-COOPERATIVE CONTROL INPUT VECTOR (The first six elements are related to the u_human, while the remaining six are related to the u_robot): \n";
-  // ROS_INFO_STREAM("control input: \n" << control << "\n");
+  /* PRINTING SECTION OF THE INTERESTED DATA ---------------------------------*/
 
+    // Print the non-cooperative control inputs in a unique vector
+    // std::cout << "NON-COOPERATIVE CONTROL INPUT VECTOR (The first 3 elements are related to the u_human, while the other 3 are related to the u_robot): \n";
+    // ROS_INFO_STREAM("control input: \n" << control << "\n");
+
+  /*--------------------------------------------------------------------------*/
 }
 
 Eigen::MatrixXd NonCoopGT::solveRiccati(const Eigen::MatrixXd &A,
@@ -228,15 +248,17 @@ Eigen::MatrixXd NonCoopGT::solveRiccati(const Eigen::MatrixXd &A,
   Eigen::MatrixXd Ham = Eigen::MatrixXd::Zero(2 * dim_x, 2 * dim_x);
   Ham << A, -B * R.inverse() * B.transpose(), -Q, -A.transpose();
 
-  // ROS_INFO_STREAM("Ham: \n" << Ham << "\n");
-
   Eigen::EigenSolver<Eigen::MatrixXd> Eigs(Ham);
 
-  // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues() << "\n");
-  // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues()[0].real() << "\n");
-  // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues()[0].imag() << "\n");
-  // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");
+  /* PRINTING SECTION OF THE INTERESTED DATA ---------------------------------*/
 
+    // ROS_INFO_STREAM("Ham: \n" << Ham << "\n");
+    // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues() << "\n");
+    // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues()[0].real() << "\n");
+    // ROS_INFO_STREAM("Eigs(Ham): \n" << Eigs.eigenvalues()[0].imag() << "\n");
+    // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");
+
+  /*--------------------------------------------------------------------------*/
 
   Eigen::MatrixXcd eigvec = Eigen::MatrixXcd::Zero(2 * dim_x, dim_x);
   int j = 0;
@@ -247,18 +269,20 @@ Eigen::MatrixXd NonCoopGT::solveRiccati(const Eigen::MatrixXd &A,
     }
   }
 
-  // ROS_INFO_STREAM("Eigvec: \n" << eigvec << "\n");
-
   Eigen::MatrixXcd Vs_1, Vs_2;
   Vs_1 = eigvec.block(0, 0, dim_x, dim_x);
   Vs_2 = eigvec.block(dim_x, 0, dim_x, dim_x);
 
+  /* PRINTING SECTION OF THE INTERESTED DATA ---------------------------------*/
+
+  // ROS_INFO_STREAM("Eigvec: \n" << eigvec << "\n");
   // ROS_INFO_STREAM("Vs_1: \n" << Vs_1 << "\n");
   // ROS_INFO_STREAM("Determinant of Vs_1: \n" << Vs_1.determinant() << "\n");
 
   // ROS_INFO_STREAM("Vs_2: \n" << Vs_2 << "\n");
   // ROS_INFO_STREAM("Determinant of Vs_2: \n" << Vs_2.determinant() << "\n");
 
+  /*--------------------------------------------------------------------------*/
 
   P = (Vs_2 * Vs_1.inverse()).real();
 
@@ -286,12 +310,14 @@ void NonCoopGT::solveNashEquilibrium(const Eigen::MatrixXd &A,
   if (init_P12_)
   {
     solveRiccati(A,B1,Q1,R1,P1);
-
-    // ROS_INFO_STREAM("P1: \n" << P1 << "\n");
-
     solveRiccati(A,B2,Q2,R2,P2);
 
+  /* PRINTING SECTION OF THE INTERESTED DATA ---------------------------------*/
+
+    // ROS_INFO_STREAM("P1: \n" << P1 << "\n");
     // ROS_INFO_STREAM("P2: \n" << P2 << "\n");
+
+  /*--------------------------------------------------------------------------*/
 
     P1_prev_ = P1;
     P2_prev_ = P2;
@@ -310,13 +336,16 @@ void NonCoopGT::solveNashEquilibrium(const Eigen::MatrixXd &A,
   while (err_1>toll && err_2>toll)
   {    
     Eigen::MatrixXd A1 = A - S2*P2;
+  
+  /* PRINTING SECTION OF THE INTERESTED DATA ---------------------------------*/
 
     // ROS_INFO_STREAM("A1: \n" << A1 << "\n");
+    // ROS_INFO_STREAM("A2: \n" << A2 << "\n");
+
+  /*--------------------------------------------------------------------------*/
 
     Eigen::MatrixXd A2 = A - S1*P1;
 
-    // ROS_INFO_STREAM("A2: \n" << A2 << "\n");
-    
     Eigen::MatrixXd Q_1 = Q1 + P1*S21*P1;
     solveRiccati(A1,B1,Q_1,R1,P1);
     Eigen::MatrixXd Q_2 = Q2 + P2*S12*P2;
@@ -332,7 +361,7 @@ void NonCoopGT::solveNashEquilibrium(const Eigen::MatrixXd &A,
   return;
 }
 
-Eigen::VectorXd  NonCoopGT::computeControlInputs()
+Eigen::VectorXd  NonCoopGT::computeControlInputs(const Eigen::VectorXd& u_h_filt)
 {
   if (!state_ok_)
     ROS_WARN_STREAM("State is not updated. computing gains on the last state received: " << X_.transpose());
@@ -350,7 +379,15 @@ Eigen::VectorXd  NonCoopGT::computeControlInputs()
   // Here below, the two controls are merged in one unique control vector, as in the case of the cooperative solution. 
   // The main difference is that, in the cooperative case, the control vector is computed already merged, while in 
   // this case the merging of the two control vector is computed after the calculations.
-  
+
+  // If GT_disabled is set to true, the robot control effort u_r is nullified, as in the case of not giving any 
+  // assistance to the collaborative transportation.
+  if (GT_disabled_)
+  {
+    u1 = u_h_filt;
+    u2.setZero(n_dofs_);
+  }
+
   control << u1,
              u2;
              
@@ -363,7 +400,7 @@ Eigen::VectorXd  NonCoopGT::computeControlInputs()
   return control;
 }
 
-Eigen::VectorXd NonCoopGT::step(const Eigen::VectorXd& x, const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2)
+Eigen::VectorXd NonCoopGT::step(const Eigen::VectorXd& x, const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2, const Eigen::VectorXd& u_h_filtered)
 {
   if (x.size() != 2*n_dofs_)
   {
@@ -385,7 +422,7 @@ Eigen::VectorXd NonCoopGT::step(const Eigen::VectorXd& x, const Eigen::VectorXd&
   
   Eigen::VectorXd u1,u2,u; u1.resize(n_dofs_);u2.resize(n_dofs_);u.resize(2*n_dofs_);
 
-  u = computeControlInputs();
+  u = computeControlInputs(u_h_filtered);
   u1=u.segment(0,n_dofs_);
   u2=u.segment(n_dofs_,n_dofs_);
   
@@ -396,9 +433,9 @@ Eigen::VectorXd NonCoopGT::step(const Eigen::VectorXd& x, const Eigen::VectorXd&
   return X_;
 }
 
-Eigen::VectorXd NonCoopGT::step(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2)
+Eigen::VectorXd NonCoopGT::step(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2, const Eigen::VectorXd& u_h_filtered)
 {
-  return step(X_,ref_1,ref_2);
+  return step(X_,ref_1,ref_2, u_h_filtered);
 }
 
 

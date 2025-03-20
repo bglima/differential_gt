@@ -7,7 +7,7 @@ class CoopGT
 {
 public:
 
-  CoopGT(const int& n_dofs, const double& dt);
+  CoopGT(const int& n_dofs, const double& dt, const bool& GT_disabled);
   
   void setSysParams(const Eigen::MatrixXd& A,
                     const Eigen::MatrixXd& B,
@@ -41,10 +41,10 @@ public:
   bool setReference(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2);
   Eigen::VectorXd getReference();
   
-  Eigen::VectorXd computeControlInputs();
+  Eigen::VectorXd computeControlInputs(const Eigen::VectorXd& u_h_filt);
   void getControlInput(Eigen::VectorXd& control);
-  Eigen::VectorXd step(const Eigen::VectorXd& x, const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2);
-  Eigen::VectorXd step(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2);
+  Eigen::VectorXd step(const Eigen::VectorXd& x, const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2, const Eigen::VectorXd& u_h_filtered);
+  Eigen::VectorXd step(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2, const Eigen::VectorXd& u_h_filtered);
   Eigen::VectorXd getCurrentState();
   
   void computeCooperativeGains(const double& alpha);
@@ -108,5 +108,6 @@ void solveNashEquilibrium( const Eigen::MatrixXd &A,
   int n_dofs_;
   double dt_;
   double alpha_;
+  bool GT_disabled_;
 };
 

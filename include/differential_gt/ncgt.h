@@ -7,7 +7,7 @@ class NonCoopGT
 {
 public:
 
-  NonCoopGT(const int& n_dofs, const double& dt);
+  NonCoopGT(const int& n_dofs, const double& dt, const bool& GT_disabled);
   
   void setSysParams(const Eigen::MatrixXd& A,
                     const Eigen::MatrixXd& B,
@@ -46,9 +46,9 @@ public:
   void getControlInput(Eigen::VectorXd& control);
 
 //   bool computeControlInputs(Eigen::VectorXd& u1, Eigen::VectorXd& u2);
-  Eigen::VectorXd  computeControlInputs();
-  Eigen::VectorXd step(const Eigen::VectorXd& x, const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2);
-  Eigen::VectorXd step(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2);
+  Eigen::VectorXd computeControlInputs(const Eigen::VectorXd& u_h_filt);
+  Eigen::VectorXd step(const Eigen::VectorXd& x, const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2, const Eigen::VectorXd& u_h_filtered);
+  Eigen::VectorXd step(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2, const Eigen::VectorXd& u_h_filtered);
   
   void computeNonCooperativeGains();
   void getNonCooperativeGains(Eigen::MatrixXd& K1, Eigen::MatrixXd& K2);
@@ -103,5 +103,6 @@ void solveNashEquilibrium( const Eigen::MatrixXd &A,
   
   int n_dofs_;
   double dt_;
+  bool GT_disabled_;
 };
 

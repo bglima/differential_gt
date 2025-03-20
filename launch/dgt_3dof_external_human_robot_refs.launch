@@ -1,4 +1,7 @@
 <launch>
+
+  <!-- Load the dgt_config.yaml file -->
+  <rosparam command="load" file="$(find differential_gt)/config/dgt_config.yaml" />
   <!-- Plot controller's state -->
   <arg name="plot_positions_and_references" default="true"/>
   <group if="$(arg plot_positions_and_references)">
@@ -6,7 +9,7 @@
       args="--multiplot-config $(find differential_gt)/config/reference_state_and_control_inputs.xml --multiplot-run-all " />
   </group>
 
-  <arg name="static_references" default="true"/>
+  <arg name="static_references" default="false"/>
   <group if="$(arg static_references)">
 
     <!-- Launch robot_reference publisher node -->

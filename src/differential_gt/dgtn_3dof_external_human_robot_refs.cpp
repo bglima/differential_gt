@@ -12,7 +12,8 @@
 #include <differential_gt/alpha_with_header.h>
 
 // First definition of the alpha value so that a first computation can be done.
-differential_gt::alpha_with_header alpha_with_header_msg;
+double alpha;
+bool GT_disabled;
 
 // Definition of the human and robot references that will be assigned through the subscription.
 geometry_msgs::PoseStamped ref_h;
@@ -29,14 +30,16 @@ int n_dofs = 3;
 Eigen::VectorXd Z = Eigen::VectorXd::Zero(2*n_dofs);
 Eigen::VectorXd dZ = Eigen::VectorXd::Zero(2*n_dofs);
 
+// Definition of the human applied filtered wrench (oriented as the base frame) used when GT_disabled is set to true
+Eigen::VectorXd human_applied_filtered_force = Eigen::VectorXd::Zero(n_dofs);
+
 // Indicates if the first initial robot pose is received.
 bool initial_robot_state_ok = false;
 
 // Callback function used for receiving the alpha parameter from another node.
-void alphaCallback(const differential_gt::alpha_with_header::ConstPtr& alpha_msg)
+void alphaCallback(const std_msgs::Float32::ConstPtr& msg)
 {
-     alpha_with_header_msg.header.stamp = alpha_msg->header.stamp;
-     alpha_with_header_msg.alpha.data = alpha_msg->alpha.data;
+     alpha = msg->data;
 }
 
 // Callback function used for receiving the human reference from another node.
@@ -48,6 +51,15 @@ void human_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
      ref_h.pose.position.z = msg->pose.position.z;
 
 }
+
+// Callback function used for receiving the updated and filtered human-applied force
+void human_applied_filtered_forceCallback(const geometry_msgs::WrenchStamped:: ConstPtr& human_applied_filtered_force_msg)
+{
+     human_applied_filtered_force(0) = human_applied_filtered_force_msg->wrench.force.x;
+     human_applied_filtered_force(1) = human_applied_filtered_force_msg->wrench.force.y;
+     human_applied_filtered_force(2) = human_applied_filtered_force_msg->wrench.force.z;
+}
+
 
 // Callback function used for receiving the robot reference from another node.
 void robot_refCallback(const geometry_msgs::PoseStamped::ConstPtr& msg)
@@ -117,6 +129,20 @@ int main(int argc, char **argv)
      the last NodeHandle destructed will close down the node.*/
      ros::NodeHandle n;
 
+     // Get boolean parameter defined in the .yaml file for the GT_disabled
+     if(!n.getParam("GT_disabled", GT_disabled))
+     {
+          GT_disabled = "false";
+          ROS_WARN_STREAM(n.getNamespace() << "GT_disabled not set! default: " << GT_disabled);
+     }
+
+     // Get the alpha parameter defined in the .yaml file in order to avoid every time the catkin building procedure
+     if(!n.getParam("alpha", alpha))
+     {
+          alpha = 0.001;
+          ROS_WARN_STREAM(n.getNamespace() << "alpha not set! default: " << alpha);
+     }
+
      // This command gives the opportunity to read the publication of the alpha parameter in a topic as a subscriber.
      ros::AsyncSpinner spinner(5);
      spinner.start();
@@ -128,8 +154,10 @@ int main(int argc, char **argv)
      // Subscribing to a topic called '/robot_ref' so that we can have the robot reference coming from an external node.
      ros::Subscriber robot_ref_sub = n.subscribe("/robot_ref", 30, robot_refCallback);
      // Subscribing to a topic called '/franka_state_controller/franka_states' so that we can have the actual state of the robot.
-     ros::Subscriber current_robot_state_sub = n.subscribe("/franka_state_controller/franka_states", 30, current_robot_stateCallback); 
-     
+     ros::Subscriber current_robot_state_sub = n.subscribe("/franka_state_controller/franka_states", 30, current_robot_stateCallback);
+     // ADD A SUBSCRIPTION RELATED TO THE EXTERNAL FILTERED HUMAN WRENCH
+     ros::Subscriber human_applied_filtered_force_sub = n.subscribe("/human_applied_filtered_wrench_in_base_frame", 30, human_applied_filtered_forceCallback);
+
      while(!initial_robot_state_ok)
      {
           ROS_INFO("waiting for an initial robot pose");
@@ -153,10 +181,48 @@ int main(int argc, char **argv)
      Eigen::MatrixXd D; D.resize(n_dofs, n_dofs);
      Eigen::MatrixXd K; K.resize(n_dofs, n_dofs);
 
-     // Inizialization of system matrices
-     M << 10*I;
-     K << O;
-     D << 25*I; // The previous parameter was 100*I
+     // System matrices definition, starting from scalar values, then rearranged as matrices
+     double m = 10;
+     double k_min = 0;
+     double k_max = 3000;
+     double k; 
+     double d;
+
+     // If GT_disabled is true, set different values for the GT controller in admittance/impedance mode
+     if (GT_disabled)
+     {
+          // Counter part of the RLC
+          if (alpha == 0.001)
+          {
+               k = k_max;
+               d = 2*sqrt(k*m);
+          }
+
+          // Counter part of the PHLC
+          else if (alpha == 0.900)
+          {
+               k = 0.10 * k_max;
+               d = 2*sqrt(k*m);
+          }
+
+          // Counter part of the HLC
+          else if (alpha == 0.999)
+          {
+               k = k_min;
+               d = 50;
+          }
+     }
+     else 
+     {
+          // In this case, the GT controller is enabled, and we go back to the usual configuration
+          k = k_min;
+          d = 25;
+     }
+
+     // Conversion from scalar values to diagonal matrices
+     M << m*I;
+     K << k*I;
+     D << d*I; // The previous parameter was 100*I
 
      // Initialize the linearized state space matrices
      Ac << O, I,
@@ -165,18 +231,22 @@ int main(int argc, char **argv)
      Bc << O,
            M.inverse();
 
-     ROS_INFO_STREAM("Ac: \n" << Ac << "\n");
-     ROS_INFO_STREAM("Bc: \n" << Bc << "\n");
+     /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+     
+          // ROS_INFO_STREAM("Ac: \n" << Ac << "\n");
+          // ROS_INFO_STREAM("Bc: \n" << Bc << "\n");
+     
+     /*-----------------------------------------------------------------------*/
 
      /* SYSTEM PARAMETERS*/
 
      // Initialize the Cooperative GT controller, set the System Parameters and get them.
-     CoopGT cgt(n_dofs,dt);
+     CoopGT cgt(n_dofs,dt, GT_disabled);
      cgt.setSysParams(Ac,Bc);
      cgt.getSysParams(Ac,Bc,Cc);
 
      // Initialize the Non-cooperative GT controller, set the System Parameters and get them.
-     NonCoopGT ncgt(n_dofs,dt);
+     NonCoopGT ncgt(n_dofs,dt, GT_disabled);
      ncgt.setSysParams(Ac,Bc);
      ncgt.getSysParams(Ac,Bc,Cc);
  
@@ -218,56 +288,53 @@ int main(int argc, char **argv)
      Eigen::MatrixXd Rh; Rh.resize(n_dofs,n_dofs); Rh << 0.0005*I; 
      Eigen::MatrixXd Rr; Rr.resize(n_dofs,n_dofs); Rr << 0.0001*I;
 
-     alpha_with_header_msg.header.stamp = ros::Time();
-     alpha_with_header_msg.alpha.data = 0.001;
+     cgt.setAlpha(alpha);
 
-     cgt.setAlpha(alpha_with_header_msg.alpha.data);
-
-     /* SET THE DIFF GAME THEORY PARAMETERS*/
+     /* SET THE DIFFERENTIAL GAME THEORY PARAMETERS*/
 
      // Set the Cooperative cost parameters
      cgt.setCostsParams(Qhh,Qhr,Qrh,Qrr,Rh,Rr);
-
      // Get Cost Matrices Qh, Qr, Rh, Rr. These are the matrices that will be passed in the Non-cooperative case for the reasoning commented above.
      cgt.getCostMatrices(Qh,Qr,Rh,Rr);
 
-     // // Print the Cooperative cost matrices.
-     // std::cout<< "COST PARAMETERS COOPERATIVE CASE: \n";
+     /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
      
-     // ROS_INFO_STREAM("Qhh: \n" << Qhh << "\n");
-     // ROS_INFO_STREAM("Qhr: \n" << Qhr << "\n");
-     // ROS_INFO_STREAM("Qrh: \n" << Qrh << "\n");
-     // ROS_INFO_STREAM("Qrr: \n" << Qrr << "\n");
-     // ROS_INFO_STREAM("Qh: \n" << Qh << "\n");
-     // ROS_INFO_STREAM("Qr: \n" << Qr << "\n");
-     // ROS_INFO_STREAM("Rh: \n" << Rh << "\n");
-     // ROS_INFO_STREAM("Rr: \n" << Rr << "\n");
+          // std::cout<< "COST PARAMETERS COOPERATIVE CASE: \n";
+          // ROS_INFO_STREAM("Qhh: \n" << Qhh << "\n");
+          // ROS_INFO_STREAM("Qhr: \n" << Qhr << "\n");
+          // ROS_INFO_STREAM("Qrh: \n" << Qrh << "\n");
+          // ROS_INFO_STREAM("Qrr: \n" << Qrr << "\n");
+          // ROS_INFO_STREAM("Qh: \n" << Qh << "\n");
+          // ROS_INFO_STREAM("Qr: \n" << Qr << "\n");
+          // ROS_INFO_STREAM("Rh: \n" << Rh << "\n");
+          // ROS_INFO_STREAM("Rr: \n" << Rr << "\n");
+     
+     /* ----------------------------------------------------------------------*/
 
      // Set the Non-cooperative cost parameters, based on the ones got from the previous line.
      ncgt.setCostsParams(Qh,Qr,Rh,Rr);
-
      // Get the Non-cooperative matrices.
      ncgt.getCostMatrices(Qh,Qr,Rh,Rr);
 
-     // // Print the Non-cooperative cost matrices.
-     // std::cout<< "COST PARAMETERS NON-COOPERATIVE CASE: \n";
-     
-     // ROS_INFO_STREAM("Qh: \n" << Qh << "\n");
-     // ROS_INFO_STREAM("Qr: \n" << Qr << "\n");
-     // ROS_INFO_STREAM("Rh: \n" << Rh << "\n");
-     // ROS_INFO_STREAM("Rr: \n" << Rr << "\n");
+     /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+          
+          // std::cout<< "COST PARAMETERS NON-COOPERATIVE CASE: \n";
+          // ROS_INFO_STREAM("Qh: \n" << Qh << "\n");
+          // ROS_INFO_STREAM("Qr: \n" << Qr << "\n");
+          // ROS_INFO_STREAM("Rh: \n" << Rh << "\n");
+          // ROS_INFO_STREAM("Rr: \n" << Rr << "\n");
+
+     /*-----------------------------------------------------------------------*/
 
      /* CURRENT STATE*/
 
      // Set the Cooperative current State
      cgt.setCurrentState(Z);
-
      // Set the Non-cooperative current state
      ncgt.setCurrentState(Z);
 
      // Get the Cooperative current state
      Z = cgt.getCurrentState();
-
      // Get the Non-cooperative current state
      Z = ncgt.getCurrentState();
 
@@ -275,41 +342,51 @@ int main(int argc, char **argv)
   
      // The following method computes the Cooperative gain Kgt
      cgt.computeCooperativeGains();
-
      // The following method computes the Non-Cooperative gains Kh and Kr
      ncgt.computeNonCooperativeGains();
 
      // Initialize and the Cooperative gain   
      Eigen::MatrixXd Kgt = cgt.getCooperativeGains();
-
      // Get the Non-Cooperative gains
      Eigen::MatrixXd Kh,Kr;
      ncgt.getNonCooperativeGains(Kh,Kr);
 
-     ROS_INFO_STREAM("Kgt: \n" << Kgt << "\n");
-     ROS_INFO_STREAM("Kh: \n" << Kh << "\n");
-     ROS_INFO_STREAM("Kr: \n" << Kr << "\n");
+     /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+          
+          // ROS_INFO_STREAM("Kgt: \n" << Kgt << "\n");
+          // ROS_INFO_STREAM("Kh: \n" << Kh << "\n");
+          // ROS_INFO_STREAM("Kr: \n" << Kr << "\n");
 
-     /* IN HERE, WE DEFINE A FIRST POSITIONAL REFERENCE TO OUR CONTROLLER */
+     /*-----------------------------------------------------------------------*/
+
+     /* IN HERE, WE DEFINE THE FIRST POSITIONAL REFERENCE TO THE GT CONTROLLER */
 
      Eigen::VectorXd rh; rh.resize(n_dofs);
      rh << ref_h.pose.position.x, ref_h.pose.position.y, ref_h.pose.position.z;
      Eigen::VectorXd rr; rr.resize(n_dofs);
      rr << ref_r.pose.position.x, ref_r.pose.position.y, ref_r.pose.position.z;
 
-     // std::cout << "Eigen::VectorXd rh: \n" << rh << "\n";
-     // std::cout << "Eigen::VectorXd rr: \n" << rr << "\n";
+     // In case GT_disabled is true, the human reference becomes equal to the robot reference
+     if (GT_disabled)
+     {
+          rh = rr;
+     }
+
+     /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+          
+          // std::cout << "Eigen::VectorXd rh: \n" << rh << "\n";
+          // std::cout << "Eigen::VectorXd rr: \n" << rr << "\n";
+
+     /*-----------------------------------------------------------------------*/
 
      // setPosReference for the Cooperative case
      cgt.setPosReference(rh,rr);  
-
      // setPosReference for the Non-cooperative case
      ncgt.setPosReference(rh,rr);
 
      // Get the first weighted reference for the Cooperative case
      Eigen::VectorXd weighted_reference;
      weighted_reference = cgt.getReference();
-
      // Get firsts human and robot reference for the Non-cooperative case
      ncgt.getReference(rh,rr);
 
@@ -335,11 +412,6 @@ int main(int argc, char **argv)
      geometry_msgs::WrenchStamped optimal_control_human_weighted_msg;
      geometry_msgs::WrenchStamped optimal_control_robot_weighted_msg;
 
-     // Instantiate Gain matrices messages
-     std_msgs::Float64MultiArray Kgt_msg;
-     std_msgs::Float64MultiArray Kh_msg;
-     std_msgs::Float64MultiArray Kr_msg;
-
      // Instantiate ROS publishers. Instead of considering the /state/pose topic, we will consider the topic which the impedance controller is subscribed to
 
      ros::Publisher commanded_pose_pub = n.advertise<geometry_msgs::PoseStamped>("/cartesian_impedance_example_controller/equilibrium_pose", 30);
@@ -357,12 +429,8 @@ int main(int argc, char **argv)
      ros::Publisher optimal_control_robot_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/robot", 30);
      ros::Publisher optimal_control_human_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/human", 30);
 
-     ros::Publisher optimal_control_human_weighted_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/human_weighted", 30);
      ros::Publisher optimal_control_robot_weighted_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/robot_weighted", 30);
-
-     ros::Publisher Kgt_pub = n.advertise<std_msgs::Float64MultiArray>("/Kgt", 30);
-     ros::Publisher Kh_pub = n.advertise<std_msgs::Float64MultiArray>("/Kh", 30);
-     ros::Publisher Kr_pub = n.advertise<std_msgs::Float64MultiArray>("/Kr", 30);
+     ros::Publisher optimal_control_human_weighted_pub = n.advertise<geometry_msgs::WrenchStamped>("/control/human_weighted", 30);
 
      // Create a ROS loop rate
      ros::Rate control_rate(rate);
@@ -371,14 +439,21 @@ int main(int argc, char **argv)
      ros::Time starting_time = ros::Time::now();
      ros::Time seconds_from_start;
 
+     // Let's define a u_h vector that takes into account the human filtered force that will go inside the impedance 
+     // equation
+     Eigen::VectorXd u_h_filtered = Eigen::VectorXd::Zero(n_dofs);
+     u_h_filtered = human_applied_filtered_force;
+
+     ROS_INFO_STREAM("u_h_filtered is:" << u_h_filtered.transpose() << "\n");
+
      // Create a control object store future optimal control inputs for the Cooperative case
      Eigen::VectorXd coop_control;
-     cgt.computeControlInputs();
+     cgt.computeControlInputs(u_h_filtered);
      cgt.getControlInput(coop_control);
 
      // Create a control object store future optimal control inputs for the Non-cooperative case
      Eigen::VectorXd non_coop_control;
-     ncgt.computeControlInputs();
+     ncgt.computeControlInputs(u_h_filtered);
      ncgt.getControlInput(non_coop_control);
 
      // Index initialization
@@ -389,22 +464,46 @@ int main(int argc, char **argv)
      // Main loop
      while (ros::ok())
      {
+
+          // /* PRINTING SECTION OF THE INTERESTED DATA ----------------------*/
+     
+          //      ROS_INFO_STREAM("M: \n" << M << "\n");
+          //      ROS_INFO_STREAM("K: \n" << K << "\n");
+          //      ROS_INFO_STREAM("D: \n" << D << "\n");
+     
+          // /*---------------------------------------------------------------*/
+
           rh << ref_h.pose.position.x, ref_h.pose.position.y, ref_h.pose.position.z;
           rr << ref_r.pose.position.x, ref_r.pose.position.y, ref_r.pose.position.z;
-          
+
+          // Fill out the u_h_filtered 
+          u_h_filtered = human_applied_filtered_force;
+
+          ROS_INFO_STREAM("u_h_filtered is:" << u_h_filtered.transpose() << "\n");
+
+          // In case GT_disabled is true, the human reference becomes equal to the robot reference
+          if (GT_disabled)
+               rh = rr;
+
           // All these functions are placed here in order to re-compute the values of the gain matrices and the corresponding control inputs
           // Depeding on the value of the alpha parameter that is passed through a topic.
-          cgt.setAlpha(alpha_with_header_msg.alpha.data);
+          cgt.setAlpha(alpha);
+
           cgt.setCostsParams(Qhh,Qhr,Qrh,Qrr,Rh,Rr);
           cgt.getCostMatrices(Qh,Qr,Rh,Rr);
+
           ncgt.setCostsParams(Qh,Qr,Rh,Rr);
           ncgt.getCostMatrices(Qh,Qr,Rh,Rr);
+
           cgt.computeCooperativeGains();
-          ncgt.computeNonCooperativeGains();
           Kgt = cgt.getCooperativeGains();
+
+          ncgt.computeNonCooperativeGains();
           ncgt.getNonCooperativeGains(Kh,Kr);
+
           cgt.setPosReference(rh,rr); 
           ncgt.setPosReference(rh,rr);
+
           weighted_reference = cgt.getReference();
           ncgt.getReference(rh,rr);
           
@@ -417,33 +516,38 @@ int main(int argc, char **argv)
 
           // For the Non-cooperative case
           Eigen::VectorXd ncgt_state = ncgt.getCurrentState();
-          ncgt.setCurrentState(ncgt_state);          
+          ncgt.setCurrentState(ncgt_state);
+
+          // Get Cooperative and Non-cooperative references.
+          weighted_reference = cgt.getReference();
+          ncgt.getReference(rh,rr);
 
           // This step function assumes that the optimal control will be performed by
           // both human and robot.
-          cgt.step(cgt_state, rh, rr);
-          ncgt.step(ncgt_state, rh, rr);
+          cgt.step(cgt_state, rh, rr, u_h_filtered);
+          ncgt.step(ncgt_state, rh, rr, u_h_filtered);
 
           // We retrieve the optimal control inputs from before the state has been
           // performed. This command is performed also inside the ncgt.step(). The 
           // optimal control inputs are calculated based on the current state.
           cgt.getControlInput(coop_control);
           ncgt.getControlInput(non_coop_control);
-     
-          // Get Cooperative and Non-cooperative references.
-          weighted_reference = cgt.getReference();
-          ncgt.getReference(rh,rr);
 
-          // ROS_INFO_STREAM("Coop control input: " << coop_control.transpose());
-          // ROS_INFO_STREAM("Non-coop Control input: " << non_coop_control.transpose());
-          // ROS_INFO_STREAM("weighted_reference: " << weighted_reference.transpose());
-          // ROS_INFO_STREAM("human reference: " << rh.transpose());
-          // ROS_INFO_STREAM("robot reference: " << rr.transpose());
+          /* PRINTING SECTION OF THE INTERESTED DATA -------------------------*/
+               
+               ROS_INFO_STREAM("Coop control input (in the main code): " << coop_control.transpose());
+               // ROS_INFO_STREAM("Non-coop Control input: " << non_coop_control.transpose());
+               // ROS_INFO_STREAM("weighted_reference: " << weighted_reference.transpose());
+               // ROS_INFO_STREAM("human reference: " << rh.transpose());
+               // ROS_INFO_STREAM("robot reference: " << rr.transpose());
 
-          // Note that we print the state stored before the step has been done.
-          // In other words, we print the previous state. 
-          // ROS_INFO_STREAM("cgt_state: " << cgt_state.transpose());
-          // ROS_INFO_STREAM("ncgt_state: " << ncgt_state.transpose());
+               // Note that we print the state stored before the step has been done.
+               // In other words, we print the previous state. 
+
+               // ROS_INFO_STREAM("cgt_state: " << cgt_state.transpose());
+               // ROS_INFO_STREAM("ncgt_state: " << ncgt_state.transpose());
+
+          /*------------------------------------------------------------------*/
 
           // Update time
           seconds_from_start = ros::Time(current_time);
@@ -504,20 +608,20 @@ int main(int argc, char **argv)
 
 
           // Update state pose message.
-          if (alpha_with_header_msg.alpha.data >= 0.5)
+          if (alpha >= 0.5)
           {
                // commanded positions
                commanded_pose_msg.pose.position.x = cgt_state(0);
                commanded_pose_msg.pose.position.y = cgt_state(1);
                commanded_pose_msg.pose.position.z = cgt_state(2);
-               // commanded orientations set equal to ref_h 
-               commanded_pose_msg.pose.orientation.x = ref_h.pose.orientation.x;
-               commanded_pose_msg.pose.orientation.y = ref_h.pose.orientation.y;
-               commanded_pose_msg.pose.orientation.z = ref_h.pose.orientation.z;
-               commanded_pose_msg.pose.orientation.w = ref_h.pose.orientation.w;
+               // commanded orientations set equal to ref_r 
+               commanded_pose_msg.pose.orientation.x = ref_r.pose.orientation.x;
+               commanded_pose_msg.pose.orientation.y = ref_r.pose.orientation.y;
+               commanded_pose_msg.pose.orientation.z = ref_r.pose.orientation.z;
+               commanded_pose_msg.pose.orientation.w = ref_r.pose.orientation.w;
           }
 
-          else if (alpha_with_header_msg.alpha.data < 0.5)
+          else if (alpha < 0.5)
           {
                // commanded positions
                commanded_pose_msg.pose.position.x = ncgt_state(0);
@@ -531,7 +635,7 @@ int main(int argc, char **argv)
           }
 
           // Update state velocity message.
-          if (alpha_with_header_msg.alpha.data >= 0.5)
+          if (alpha >= 0.5)
           {
                commanded_velocity_msg.twist.linear.x = cgt_state(3);
                commanded_velocity_msg.twist.linear.y = cgt_state(4);
@@ -541,7 +645,7 @@ int main(int argc, char **argv)
                commanded_velocity_msg.twist.angular.y = 0;
                commanded_velocity_msg.twist.angular.z = 0;
           }
-          else if (alpha_with_header_msg.alpha.data < 0.5)
+          else if (alpha < 0.5)
           {
                commanded_velocity_msg.twist.linear.x = ncgt_state(6);
                commanded_velocity_msg.twist.linear.y = ncgt_state(7);
@@ -581,54 +685,6 @@ int main(int argc, char **argv)
           optimal_control_robot_weighted_msg.wrench.torque.y = 0;
           optimal_control_robot_weighted_msg.wrench.torque.z = 0;
 
-          // ADDED PART FOR THE GAIN MATRICES OF COOPERATIVE AND NON-COOPERATIVE CASES
-          if (alpha_with_header_msg.alpha.data >= 0.5)
-          {
-               // Definition of the global B matrix for the cooperative case
-               Eigen::MatrixXd B_doubled; B_doubled.resize(6,6);
-               B_doubled << Bc, Bc;
-
-               // Definition of the controlled system in state-space form )cooperative case)
-               Eigen::MatrixXd controlled_system; controlled_system.resize(6,6);
-               controlled_system << Ac - B_doubled*Kgt;
-               // ROS_INFO_STREAM("controlled_system: \n" << controlled_system << "\n");
-
-               // Computation of eigenvalues and eigenvectors of the controlled system
-               Eigen::EigenSolver<Eigen::MatrixXd> Eigs(controlled_system);
-
-               // Printing the eigenvalues
-               // ROS_INFO_STREAM("Eigs(controlled_system) \n" << Eigs.eigenvalues() << "\n");
-               // ROS_INFO_STREAM("Real part of the first eigenvalue: \n" << Eigs.eigenvalues()[0].real() << "\n");
-               // ROS_INFO_STREAM("Imag part of the first eigenvalue Eigs: \n" << Eigs.eigenvalues()[0].imag() << "\n");
-               // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");    
-
-               // Conversion of Kgt matrix from Eigen::MatrixXd into a std_msgs/Float64MultiArray message
-               tf::matrixEigenToMsg(Kgt, Kgt_msg);
-               // ROS_INFO_STREAM("Kgt_msg: \n" << Kgt_msg << "\n");
-          }
-          else if (alpha_with_header_msg.alpha.data < 0.5)
-          {
-               // Definition of the controlled system in state-space form (non-cooperative case)
-               Eigen::MatrixXd controlled_system; controlled_system.resize(6,6);
-               controlled_system << Ac - Bc*Kh - Bc*Kr;
-               // ROS_INFO_STREAM("controlled_system: \n" << controlled_system << "\n");
-
-               // Computation of the eigenvalues and eigenvectors of the controlled system
-               Eigen::EigenSolver<Eigen::MatrixXd> Eigs(controlled_system);
-
-               // Printing the eigenvalues
-               // ROS_INFO_STREAM("Eigs(controlled_system) \n" << Eigs.eigenvalues() << "\n");
-               // ROS_INFO_STREAM("Real part of the first eigenvalue: \n" << Eigs.eigenvalues()[0].real() << "\n");
-               // ROS_INFO_STREAM("Imag part of the first eigenvalue Eigs: \n" << Eigs.eigenvalues()[0].imag() << "\n");
-               // ROS_INFO_STREAM("Eigs.eigenvectors: \n" << Eigs.eigenvectors() << "\n");
-
-               // Conversion of Kh and Kr matrices from Eigen::MatrixXd into a std_msgs/Float64MultiArray message
-               tf::matrixEigenToMsg(Kh, Kh_msg);
-               tf::matrixEigenToMsg(Kr, Kr_msg);
-               // ROS_INFO_STREAM("Kh_msg: \n" << Kh_msg << "\n");
-               // ROS_INFO_STREAM("Kr_msg: \n" << Kr_msg << "\n");
-          }
-
           // Publish messages
           commanded_pose_pub.publish(commanded_pose_msg);
           commanded_velocity_pub.publish(commanded_velocity_msg);
@@ -647,10 +703,6 @@ int main(int argc, char **argv)
 
           optimal_control_human_weighted_pub.publish(optimal_control_human_weighted_msg);
           optimal_control_robot_weighted_pub.publish(optimal_control_robot_weighted_msg);
-
-          Kgt_pub.publish(Kgt_msg);
-          Kh_pub.publish(Kh_msg);
-          Kr_pub.publish(Kr_msg);
 
           // Update the current time
           current_time += dt;
