@@ -43,7 +43,7 @@ public:
   bool setReference(const Eigen::VectorXd& ref_1, const Eigen::VectorXd& ref_2);
   void getReference(Eigen::VectorXd& ref_1, Eigen::VectorXd& ref_2);
 
-  void getControlInput(Eigen::VectorXd& control);
+  void getControlInput(Eigen::VectorXd& control, Eigen::VectorXd& u_h_filt);
 
 //   bool computeControlInputs(Eigen::VectorXd& u1, Eigen::VectorXd& u2);
   Eigen::VectorXd computeControlInputs(const Eigen::VectorXd& u_h_filt);

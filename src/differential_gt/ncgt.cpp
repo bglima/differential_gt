@@ -217,13 +217,19 @@ void NonCoopGT::getReference(Eigen::VectorXd& ref_1, Eigen::VectorXd& ref_2)
   /*--------------------------------------------------------------------------*/
 }
 
-void NonCoopGT::getControlInput(Eigen::VectorXd& control)
+void NonCoopGT::getControlInput(Eigen::VectorXd& control, Eigen::VectorXd& u_h_filt)
 {
 
   Eigen::VectorXd u_1 = -K_1_ * (X_ - ref_1_);
   Eigen::VectorXd u_2 = -K_2_ * (X_ - ref_2_);
 
   control.resize(2*n_dofs_);
+
+  if (GT_disabled_)
+  {
+    u_1 = u_h_filt;
+    u_2.setZero(n_dofs_);
+  }
 
   control << u_1,u_2;
 
@@ -423,6 +429,13 @@ Eigen::VectorXd NonCoopGT::step(const Eigen::VectorXd& x, const Eigen::VectorXd&
   Eigen::VectorXd u1,u2,u; u1.resize(n_dofs_);u2.resize(n_dofs_);u.resize(2*n_dofs_);
 
   u = computeControlInputs(u_h_filtered);
+
+  if (GT_disabled_)
+  {
+    u1 = u_h_filtered;
+    u2.setZero(n_dofs_);
+  }
+
   u1=u.segment(0,n_dofs_);
   u2=u.segment(n_dofs_,n_dofs_);
   

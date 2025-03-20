@@ -390,8 +390,11 @@ Eigen::VectorXd CoopGT::computeControlInputs(const Eigen::VectorXd& u_h_filt)
   Eigen::VectorXd control = -K_cgt_ * X_ + K_cgt_ * reference_;
 
   if (GT_disabled_)
+  {
     control.segment(0, n_dofs_) = u_h_filt;
     control.segment(n_dofs_, n_dofs_).setZero();
+  }
+
 
   // // I comment this part at the moment since I don't why there wasit before.
   // if(n_dofs_>3)
@@ -406,7 +409,7 @@ Eigen::VectorXd CoopGT::computeControlInputs(const Eigen::VectorXd& u_h_filt)
   return control;
 }
 
-void CoopGT::getControlInput(Eigen::VectorXd& control)
+void CoopGT::getControlInput(Eigen::VectorXd& control, Eigen::VectorXd& u_h_filt)
 {
   // Remember that the whole control vector is defined by two subvectors:
   // the first six elements are related to the weighted control of the human, 
@@ -421,6 +424,12 @@ void CoopGT::getControlInput(Eigen::VectorXd& control)
     // ROS_INFO_STREAM("control input (after the step function)): \n" << control << "\n");
 
   /*-----------------------------------------------------------------------*/
+
+  if (GT_disabled_)
+  {
+    control.segment(0, n_dofs_) = u_h_filt;
+    control.segment(n_dofs_, n_dofs_).setZero();
+  }
 
 }
 
@@ -446,14 +455,20 @@ Eigen::VectorXd CoopGT::step(const Eigen::VectorXd& x, const Eigen::VectorXd& re
   
   Eigen::VectorXd u = computeControlInputs(u_h_filtered);
 
+  if (GT_disabled_)
+  {
+    u.segment(0, n_dofs_) = u_h_filtered;
+    u.segment(n_dofs_, n_dofs_).setZero();
+  }
+
   // Compute the update
   setCurrentState(x);
   dX_ = A_*X_ + B_*u.segment(0,n_dofs_) + B_*u.segment(n_dofs_,n_dofs_);
   X_ = X_ + dX_*dt_;
 
-  // /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
+  /* PRINTING SECTION OF THE INTERESTED DATA ------------------------------*/
 
-  //   // Print Coop control input as a unique vector, in which two subvectors are defined (the first for the human and the second for the robot)
+  // Print Coop control input as a unique vector, in which two subvectors are defined (the first for the human and the second for the robot)
   ROS_INFO_STREAM("control input (inside the step function): \n" << u.transpose() << "\n");
 
   // /*-----------------------------------------------------------------------*/

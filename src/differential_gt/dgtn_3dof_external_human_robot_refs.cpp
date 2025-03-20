@@ -444,17 +444,17 @@ int main(int argc, char **argv)
      Eigen::VectorXd u_h_filtered = Eigen::VectorXd::Zero(n_dofs);
      u_h_filtered = human_applied_filtered_force;
 
-     ROS_INFO_STREAM("u_h_filtered is:" << u_h_filtered.transpose() << "\n");
+     // ROS_INFO_STREAM("u_h_filtered is:" << u_h_filtered.transpose() << "\n");
 
      // Create a control object store future optimal control inputs for the Cooperative case
      Eigen::VectorXd coop_control;
      cgt.computeControlInputs(u_h_filtered);
-     cgt.getControlInput(coop_control);
+     cgt.getControlInput(coop_control, u_h_filtered);
 
      // Create a control object store future optimal control inputs for the Non-cooperative case
      Eigen::VectorXd non_coop_control;
      ncgt.computeControlInputs(u_h_filtered);
-     ncgt.getControlInput(non_coop_control);
+     ncgt.getControlInput(non_coop_control, u_h_filtered);
 
      // Index initialization
      long double current_time = 0;
@@ -467,9 +467,9 @@ int main(int argc, char **argv)
 
           // /* PRINTING SECTION OF THE INTERESTED DATA ----------------------*/
      
-          //      ROS_INFO_STREAM("M: \n" << M << "\n");
-          //      ROS_INFO_STREAM("K: \n" << K << "\n");
-          //      ROS_INFO_STREAM("D: \n" << D << "\n");
+               ROS_INFO_STREAM("M: \n" << M << "\n");
+               ROS_INFO_STREAM("K: \n" << K << "\n");
+               ROS_INFO_STREAM("D: \n" << D << "\n");
      
           // /*---------------------------------------------------------------*/
 
@@ -479,7 +479,7 @@ int main(int argc, char **argv)
           // Fill out the u_h_filtered 
           u_h_filtered = human_applied_filtered_force;
 
-          ROS_INFO_STREAM("u_h_filtered is:" << u_h_filtered.transpose() << "\n");
+          // ROS_INFO_STREAM("u_h_filtered is:" << u_h_filtered.transpose() << "\n");
 
           // In case GT_disabled is true, the human reference becomes equal to the robot reference
           if (GT_disabled)
@@ -530,12 +530,12 @@ int main(int argc, char **argv)
           // We retrieve the optimal control inputs from before the state has been
           // performed. This command is performed also inside the ncgt.step(). The 
           // optimal control inputs are calculated based on the current state.
-          cgt.getControlInput(coop_control);
-          ncgt.getControlInput(non_coop_control);
+          cgt.getControlInput(coop_control, u_h_filtered);
+          ncgt.getControlInput(non_coop_control, u_h_filtered);
 
           /* PRINTING SECTION OF THE INTERESTED DATA -------------------------*/
                
-               ROS_INFO_STREAM("Coop control input (in the main code): " << coop_control.transpose());
+               // ROS_INFO_STREAM("Coop control input (in the main code): " << coop_control.transpose());
                // ROS_INFO_STREAM("Non-coop Control input: " << non_coop_control.transpose());
                // ROS_INFO_STREAM("weighted_reference: " << weighted_reference.transpose());
                // ROS_INFO_STREAM("human reference: " << rh.transpose());
