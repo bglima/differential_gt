@@ -12,6 +12,7 @@
 #include <differential_gt/alpha_with_header.h>
 
 // First definition of the alpha value so that a first computation can be done.
+double alpha_from_parameter;
 double alpha;
 bool GT_disabled;
 
@@ -137,10 +138,10 @@ int main(int argc, char **argv)
      }
 
      // Get the alpha parameter defined in the .yaml file in order to avoid every time the catkin building procedure
-     if(!n.getParam("alpha", alpha))
+     if(!n.getParam("alpha", alpha_from_parameter))
      {
-          alpha = 0.001;
-          ROS_WARN_STREAM(n.getNamespace() << "alpha not set! default: " << alpha);
+          alpha_from_parameter = 0.001;
+          ROS_WARN_STREAM(n.getNamespace() << "alpha not set! default: " << alpha_from_parameter);
      }
 
      // This command gives the opportunity to read the publication of the alpha parameter in a topic as a subscriber.
@@ -192,24 +193,24 @@ int main(int argc, char **argv)
      if (GT_disabled)
      {
           // Counter part of the RLC
-          if (alpha == 0.001)
+          if (alpha_from_parameter == 0.001)
           {
                k = k_max;
                d = 2*sqrt(k*m);
           }
 
           // Counter part of the PHLC
-          else if (alpha == 0.900)
+          else if (alpha_from_parameter == 0.900)
           {
-               k = 0.10 * k_max;
+               k = 0.10*k_max;
                d = 2*sqrt(k*m);
           }
 
           // Counter part of the HLC
-          else if (alpha == 0.999)
+          else if (alpha_from_parameter == 0.999)
           {
                k = k_min;
-               d = 50;
+               d = 150;
           }
      }
      else 
@@ -288,6 +289,7 @@ int main(int argc, char **argv)
      Eigen::MatrixXd Rh; Rh.resize(n_dofs,n_dofs); Rh << 0.0005*I; 
      Eigen::MatrixXd Rr; Rr.resize(n_dofs,n_dofs); Rr << 0.0001*I;
 
+     alpha = alpha_from_parameter;
      cgt.setAlpha(alpha);
 
      /* SET THE DIFFERENTIAL GAME THEORY PARAMETERS*/
@@ -380,7 +382,7 @@ int main(int argc, char **argv)
      /*-----------------------------------------------------------------------*/
 
      // setPosReference for the Cooperative case
-     cgt.setPosReference(rh,rr);  
+     cgt.setPosReference(rh,rr);
      // setPosReference for the Non-cooperative case
      ncgt.setPosReference(rh,rr);
 
@@ -440,7 +442,7 @@ int main(int argc, char **argv)
      ros::Time seconds_from_start;
 
      // Let's define a u_h vector that takes into account the human filtered force that will go inside the impedance 
-     // equation
+     // equation in state space form
      Eigen::VectorXd u_h_filtered = Eigen::VectorXd::Zero(n_dofs);
      u_h_filtered = human_applied_filtered_force;
 
@@ -465,13 +467,13 @@ int main(int argc, char **argv)
      while (ros::ok())
      {
 
-          // /* PRINTING SECTION OF THE INTERESTED DATA ----------------------*/
+          /* PRINTING SECTION OF THE INTERESTED DATA -------------------------*/
      
                ROS_INFO_STREAM("M: \n" << M << "\n");
                ROS_INFO_STREAM("K: \n" << K << "\n");
                ROS_INFO_STREAM("D: \n" << D << "\n");
      
-          // /*---------------------------------------------------------------*/
+          /*------------------------------------------------------------------*/
 
           rh << ref_h.pose.position.x, ref_h.pose.position.y, ref_h.pose.position.z;
           rr << ref_r.pose.position.x, ref_r.pose.position.y, ref_r.pose.position.z;
@@ -483,7 +485,9 @@ int main(int argc, char **argv)
 
           // In case GT_disabled is true, the human reference becomes equal to the robot reference
           if (GT_disabled)
+          {
                rh = rr;
+          }
 
           // All these functions are placed here in order to re-compute the values of the gain matrices and the corresponding control inputs
           // Depeding on the value of the alpha parameter that is passed through a topic.
@@ -538,14 +542,14 @@ int main(int argc, char **argv)
                // ROS_INFO_STREAM("Coop control input (in the main code): " << coop_control.transpose());
                // ROS_INFO_STREAM("Non-coop Control input: " << non_coop_control.transpose());
                // ROS_INFO_STREAM("weighted_reference: " << weighted_reference.transpose());
-               // ROS_INFO_STREAM("human reference: " << rh.transpose());
-               // ROS_INFO_STREAM("robot reference: " << rr.transpose());
+               ROS_INFO_STREAM("human reference: " << rh.transpose());
+               ROS_INFO_STREAM("robot reference: " << rr.transpose());
 
                // Note that we print the state stored before the step has been done.
                // In other words, we print the previous state. 
 
                // ROS_INFO_STREAM("cgt_state: " << cgt_state.transpose());
-               // ROS_INFO_STREAM("ncgt_state: " << ncgt_state.transpose());
+               ROS_INFO_STREAM("ncgt_state: " << ncgt_state.transpose());
 
           /*------------------------------------------------------------------*/
 

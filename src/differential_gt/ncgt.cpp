@@ -227,11 +227,12 @@ void NonCoopGT::getControlInput(Eigen::VectorXd& control, Eigen::VectorXd& u_h_f
 
   if (GT_disabled_)
   {
-    u_1 = u_h_filt;
-    u_2.setZero(n_dofs_);
+    control << u_h_filt, Eigen::VectorXd::Zero(n_dofs_);
   }
-
-  control << u_1,u_2;
+  else
+  {
+    control << u_1,u_2;
+  }
 
   /* PRINTING SECTION OF THE INTERESTED DATA ---------------------------------*/
 
@@ -390,12 +391,12 @@ Eigen::VectorXd  NonCoopGT::computeControlInputs(const Eigen::VectorXd& u_h_filt
   // assistance to the collaborative transportation.
   if (GT_disabled_)
   {
-    u1 = u_h_filt;
-    u2.setZero(n_dofs_);
+    control << u_h_filt, Eigen::VectorXd::Zero(n_dofs_);
   }
-
-  control << u1,
-             u2;
+  else
+  {
+    control << u1, u2;
+  }
              
   // if(n_dofs_>3)
   // {
@@ -435,10 +436,12 @@ Eigen::VectorXd NonCoopGT::step(const Eigen::VectorXd& x, const Eigen::VectorXd&
     u1 = u_h_filtered;
     u2.setZero(n_dofs_);
   }
+  else
+  {
+    u1=u.segment(0,n_dofs_);
+    u2=u.segment(n_dofs_,n_dofs_);
+  }
 
-  u1=u.segment(0,n_dofs_);
-  u2=u.segment(n_dofs_,n_dofs_);
-  
   setCurrentState(x);
   dX_ = A_*X_ + B_*u1 + B_*u2;
   X_ = X_ + dX_*dt_;

@@ -1,0 +1,9 @@
+<launch>
+
+  <!-- Load the dgt_config.yaml file -->
+  <rosparam command="load" file="$(find differential_gt)/config/dgt_config.yaml" />
+  <!-- Execute the alpha_publisher node -->
+  <node name="alpha_publisher" pkg="differential_gt" type="alpha_publisher.py" respawn="false" 
+    args="" output="screen" />
+
+</launch>
